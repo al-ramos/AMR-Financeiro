@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RDS.Financeiro.API/RDS.Financeiro.API.csproj" />
+    <Project Path="src/RDS.Financeiro.Application/RDS.Financeiro.Application.csproj" />
+    <Project Path="src/RDS.Financeiro.Domain/RDS.Financeiro.Domain.csproj" />
+    <Project Path="src/RDS.Financeiro.Infrastructure/RDS.Financeiro.Infrastructure.csproj" />
+    <Project Path="src/RDS.Financeiro.Shared/RDS.Financeiro.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RDS.Financeiro.Tests/RDS.Financeiro.Tests.csproj" />
+  </Folder>
+</Solution>

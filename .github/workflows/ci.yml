@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, "feat/**", "fix/**" ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore RDS.Financeiro.slnx
+
+      - name: Build (no warnings as errors)
+        run: dotnet build RDS.Financeiro.slnx --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test RDS.Financeiro.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: "**/TestResults/**/coverage.cobertura.xml"
+          retention-days: 7

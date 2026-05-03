@@ -1,0 +1,27 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docview
+
+# Build outputs
+**/bin/
+**/obj/
+
+# Env / secrets
+.env
+.env.local
+appsettings.Development.json
+appsettings.*.json
+
+# Test results & coverage
+**/TestResults/
+*.coveragexml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
