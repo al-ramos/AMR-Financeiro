@@ -1,10 +1,9 @@
 using Moq;
 using RDS.Financeiro.Application.Features.Lancamentos.Commands;
 using RDS.Financeiro.Application.Features.Lancamentos.Handlers;
+using RDS.Financeiro.Domain.Entities;
 using RDS.Financeiro.Domain.Enums;
 using RDS.Financeiro.Domain.Interfaces;
-using PlanoContas = RDS.Financeiro.Domain.Entities.PlanoContas;
-using LancamentoFinanceiro = RDS.Financeiro.Domain.Entities.LancamentoFinanceiro;
 
 namespace RDS.Financeiro.Tests.Features.Lancamentos;
 
@@ -16,19 +15,6 @@ public class CriarLancamentoHandlerTests
 
     private CriarLancamentoHandler CreateHandler() =>
         new(_repoMock.Object, _planoMock.Object, _uowMock.Object);
-
-    private static PlanoContas PlanoAnaliticoAtivo() =>
-        new(1, "1.1.1", "Caixa", TipoContaPlano.Analitica);
-
-    private static PlanoContas PlanoSintetico() =>
-        new(1, "1", "Ativo", TipoContaPlano.Sintetica);
-
-    private static PlanoContas PlanoInativo()
-    {
-        var p = new PlanoContas(1, "1.1.2", "Banco Inativo", TipoContaPlano.Analitica);
-        p.Inativar();
-        return p;
-    }
 
     [Fact]
     public async Task Handle_ValorZero_LancaInvalidOperationException()
@@ -54,7 +40,7 @@ public class CriarLancamentoHandlerTests
     public async Task Handle_PlanoContasNaoEncontrado_LancaInvalidOperationException()
     {
         _planoMock.Setup(r => r.ObterPorIdAsync(99, default))
-                  .ReturnsAsync((PlanoContas?)null);
+                  .ReturnsAsync((RDS.Financeiro.Domain.Entities.PlanoContas?)null);
 
         var cmd = new CriarLancamentoCommand(1, 99, TipoLancamento.Credito, 500m,
             new DateOnly(2026, 5, 1), "Historico");
@@ -66,8 +52,9 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_PlanoSintetico_LancaInvalidOperationException()
     {
+        var plano = new RDS.Financeiro.Domain.Entities.PlanoContas(1, "1", "Ativo", TipoContaPlano.Sintetica);
         _planoMock.Setup(r => r.ObterPorIdAsync(1, default))
-                  .ReturnsAsync(PlanoSintetico());
+                  .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 1, TipoLancamento.Credito, 500m,
             new DateOnly(2026, 5, 1), "Historico");
@@ -81,8 +68,10 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_PlanoInativo_LancaInvalidOperationException()
     {
+        var plano = new RDS.Financeiro.Domain.Entities.PlanoContas(1, "1.1.2", "Banco Inativo", TipoContaPlano.Analitica);
+        plano.Inativar();
         _planoMock.Setup(r => r.ObterPorIdAsync(5, default))
-                  .ReturnsAsync(PlanoInativo());
+                  .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 5, TipoLancamento.Credito, 500m,
             new DateOnly(2026, 5, 1), "Historico");
@@ -96,8 +85,9 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_DadosValidos_AdicionaLancamentoESalva()
     {
+        var plano = new RDS.Financeiro.Domain.Entities.PlanoContas(1, "1.1.1", "Caixa", TipoContaPlano.Analitica);
         _planoMock.Setup(r => r.ObterPorIdAsync(10, default))
-                  .ReturnsAsync(PlanoAnaliticoAtivo());
+                  .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 10, TipoLancamento.Credito, 1500m,
             new DateOnly(2026, 5, 1), "Venda à vista");
@@ -111,8 +101,9 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_DadosValidos_OrigemEManual()
     {
+        var plano = new RDS.Financeiro.Domain.Entities.PlanoContas(1, "1.1.1", "Caixa", TipoContaPlano.Analitica);
         _planoMock.Setup(r => r.ObterPorIdAsync(10, default))
-                  .ReturnsAsync(PlanoAnaliticoAtivo());
+                  .ReturnsAsync(plano);
 
         LancamentoFinanceiro? capturado = null;
         _repoMock.Setup(r => r.AdicionarAsync(It.IsAny<LancamentoFinanceiro>(), default))
