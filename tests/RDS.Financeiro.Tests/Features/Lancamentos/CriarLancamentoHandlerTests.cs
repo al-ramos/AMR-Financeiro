@@ -1,9 +1,10 @@
 using Moq;
 using RDS.Financeiro.Application.Features.Lancamentos.Commands;
 using RDS.Financeiro.Application.Features.Lancamentos.Handlers;
-using RDS.Financeiro.Domain.Entities;
 using RDS.Financeiro.Domain.Enums;
 using RDS.Financeiro.Domain.Interfaces;
+using PlanoContas = RDS.Financeiro.Domain.Entities.PlanoContas;
+using LancamentoFinanceiro = RDS.Financeiro.Domain.Entities.LancamentoFinanceiro;
 
 namespace RDS.Financeiro.Tests.Features.Lancamentos;
 
