@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, NavLink } from 'react-router-dom';
 import { PlanoContasPage } from './pages/PlanoContasPage';
 import { LancamentosPage } from './pages/LancamentosPage';
+import { ContasPagarPage } from './pages/ContasPagarPage';
 
 function Sidebar() {
   const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -16,34 +17,17 @@ function Sidebar() {
         <span className="text-lg font-bold text-gray-900">AMR</span>
         <span className="text-lg font-light text-blue-600"> Financeiro</span>
       </div>
-
       <nav className="flex flex-col gap-0.5">
-        <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Cadastros
-        </p>
-        <NavLink to="/plano-contas" className={navClass}>
-          Plano de Contas
-        </NavLink>
+        <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cadastros</p>
+        <NavLink to="/plano-contas" className={navClass}>Plano de Contas</NavLink>
 
-        <p className="px-3 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Movimento
-        </p>
-        <NavLink to="/lancamentos" className={navClass}>
-          Lancamentos
-        </NavLink>
-        <NavLink to="/contas-pagar" className={navClass}>
-          Contas a Pagar
-        </NavLink>
-        <NavLink to="/contas-receber" className={navClass}>
-          Contas a Receber
-        </NavLink>
+        <p className="px-3 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Movimento</p>
+        <NavLink to="/lancamentos" className={navClass}>Lancamentos</NavLink>
+        <NavLink to="/contas-pagar" className={navClass}>Contas a Pagar</NavLink>
+        <NavLink to="/contas-receber" className={navClass}>Contas a Receber</NavLink>
 
-        <p className="px-3 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Relatorios
-        </p>
-        <NavLink to="/dashboard" className={navClass}>
-          Dashboard
-        </NavLink>
+        <p className="px-3 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Relatorios</p>
+        <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
       </nav>
     </aside>
   );
@@ -71,7 +55,7 @@ export default function App() {
             <Route path="/" element={<LancamentosPage />} />
             <Route path="/plano-contas" element={<PlanoContasPage />} />
             <Route path="/lancamentos" element={<LancamentosPage />} />
-            <Route path="/contas-pagar" element={<EmConstrucao titulo="Contas a Pagar" />} />
+            <Route path="/contas-pagar" element={<ContasPagarPage />} />
             <Route path="/contas-receber" element={<EmConstrucao titulo="Contas a Receber" />} />
             <Route path="/dashboard" element={<EmConstrucao titulo="Dashboard" />} />
           </Routes>
