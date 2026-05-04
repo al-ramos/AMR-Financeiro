@@ -21,13 +21,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore RDS.Financeiro.slnx
+        run: dotnet restore AMR.Financeiro.slnx
 
       - name: Build (no warnings as errors)
-        run: dotnet build RDS.Financeiro.slnx --no-restore --configuration Release
+        run: dotnet build AMR.Financeiro.slnx --no-restore --configuration Release
 
       - name: Run unit tests
-        run: dotnet test RDS.Financeiro.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+        run: dotnet test AMR.Financeiro.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

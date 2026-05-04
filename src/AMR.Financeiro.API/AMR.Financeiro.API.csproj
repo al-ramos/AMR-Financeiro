@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.25" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMR.Financeiro.Application\AMR.Financeiro.Application.csproj" />
+    <ProjectReference Include="..\AMR.Financeiro.Domain\AMR.Financeiro.Domain.csproj" />
+    <ProjectReference Include="..\AMR.Financeiro.Infrastructure\AMR.Financeiro.Infrastructure.csproj" />
+    <ProjectReference Include="..\AMR.Financeiro.Shared\AMR.Financeiro.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AMR.Financeiro.API/AMR.Financeiro.API.csproj" />
+    <Project Path="src/AMR.Financeiro.Application/AMR.Financeiro.Application.csproj" />
+    <Project Path="src/AMR.Financeiro.Domain/AMR.Financeiro.Domain.csproj" />
+    <Project Path="src/AMR.Financeiro.Infrastructure/AMR.Financeiro.Infrastructure.csproj" />
+    <Project Path="src/AMR.Financeiro.Shared/AMR.Financeiro.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AMR.Financeiro.Tests/AMR.Financeiro.Tests.csproj" />
+  </Folder>
+</Solution>
