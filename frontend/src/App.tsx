@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes, NavLink } from 'react-router-dom';
 import { PlanoContasPage } from './pages/PlanoContasPage';
+import { LancamentosPage } from './pages/LancamentosPage';
 
 function Sidebar() {
   const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -52,7 +53,7 @@ function EmConstrucao({ titulo }: { titulo: string }) {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <p className="text-5xl mb-4">em construcao</p>
+        <p className="text-5xl mb-4">🚧</p>
         <h2 className="text-xl font-semibold text-gray-700">{titulo}</h2>
         <p className="text-sm text-gray-400 mt-2">Em desenvolvimento - Sprint 3</p>
       </div>
@@ -67,9 +68,9 @@ export default function App() {
         <Sidebar />
         <div className="flex-1">
           <Routes>
-            <Route path="/" element={<PlanoContasPage />} />
+            <Route path="/" element={<LancamentosPage />} />
             <Route path="/plano-contas" element={<PlanoContasPage />} />
-            <Route path="/lancamentos" element={<EmConstrucao titulo="Lancamentos" />} />
+            <Route path="/lancamentos" element={<LancamentosPage />} />
             <Route path="/contas-pagar" element={<EmConstrucao titulo="Contas a Pagar" />} />
             <Route path="/contas-receber" element={<EmConstrucao titulo="Contas a Receber" />} />
             <Route path="/dashboard" element={<EmConstrucao titulo="Dashboard" />} />
