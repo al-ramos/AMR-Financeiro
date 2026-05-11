@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: amr_financeiro_api
+    ports:
+      - "5015:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ConnectionStrings__DefaultConnection: "Server=host.docker.internal,1433;Database=AMR.Financeiro;User Id=rds_app;Password=844932;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Financeiro__BaseUrl: "http://api:8080"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: amr_financeiro_web
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+    restart: unless-stopped

@@ -10,10 +10,12 @@ namespace AMR.Financeiro.Tests.Features.ContasPagar;
 public class PagarContaHandlerTests
 {
     private readonly Mock<IContaPagarRepository> _repoMock = new();
+    private readonly Mock<IPlanoContasRepository> _planoContasMock = new();
+    private readonly Mock<ILancamentoFinanceiroRepository> _lancamentoMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
 
     private PagarContaHandler CreateHandler() =>
-        new(_repoMock.Object, _uowMock.Object);
+        new(_repoMock.Object, _planoContasMock.Object, _lancamentoMock.Object, _uowMock.Object);
 
     private static ContaPagar ContaAberta() =>
         new(1, "Fornecedor XYZ", 1000m, new DateOnly(2026, 5, 31));

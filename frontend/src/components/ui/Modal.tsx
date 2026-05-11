@@ -8,11 +8,8 @@ interface Props {
 }
 
 export function Modal({ titulo, aberto, onFechar, children }: Props) {
-  // Fecha com Esc
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onFechar();
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onFechar(); };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onFechar]);
@@ -20,29 +17,24 @@ export function Modal({ titulo, aberto, onFechar, children }: Props) {
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* overlay */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onFechar}
-      />
-
-      {/* painel */}
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl shadow-xl mx-4">
-        {/* cabeçalho */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">{titulo}</h2>
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1050,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,.45)',
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onFechar(); }}
+    >
+      <div className="bg-white rounded-3 shadow" style={{ width: '100%', maxWidth: 520, margin: '0 1rem' }}>
+        <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+          <h6 className="mb-0 fw-semibold" style={{ fontSize: 15 }}>{titulo}</h6>
           <button
             onClick={onFechar}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="btn-close btn-sm"
             aria-label="Fechar"
-          >
-            ✕
-          </button>
+          />
         </div>
-
-        {/* conteúdo */}
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-4 py-4">{children}</div>
       </div>
     </div>
   );

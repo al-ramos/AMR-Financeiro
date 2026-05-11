@@ -28,4 +28,10 @@ public class ContaPagar
     }
 
     public void Cancelar() => Status = StatusConta.Cancelada;
+
+    public void MarcarVencida()
+    {
+        if (Status == StatusConta.Aberta && Vencimento < DateOnly.FromDateTime(DateTime.UtcNow))
+            Status = StatusConta.Vencida;
+    }
 }

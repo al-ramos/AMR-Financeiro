@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useContasPagar, useCriarContaPagar, usePagarConta, useCancelarConta } from '../hooks/useContasPagar';
-import type { ContaPagarDto } from '../api/contasPagarApi';
-import { ContaPagarForm } from '../components/contasPagar/ContaPagarForm';
+import { useContasReceber, useCriarContaReceber, useReceberConta, useCancelarContaReceber } from '../hooks/useContasReceber';
+import type { ContaReceberDto } from '../api/contasReceberApi';
+import { ContaReceberForm } from '../components/contasReceber/ContaReceberForm';
 import { Modal } from '../components/ui/Modal';
 import { AlertaErro } from '../components/ui/AlertaErro';
 
@@ -16,13 +16,13 @@ function brl(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function StatusBadge({ status }: { status: ContaPagarDto['status'] }) {
+function StatusBadge({ status }: { status: ContaReceberDto['status'] }) {
   const cls: Record<string, string> = {
-    Aberta: 'badge-aberta', Paga: 'badge-paga',
+    Aberta: 'badge-aberta', Recebida: 'badge-paga',
     Vencida: 'badge-vencida', Cancelada: 'badge-cancelada',
   };
   const icon: Record<string, string> = {
-    Aberta: 'bi-hourglass-split', Paga: 'bi-check-circle',
+    Aberta: 'bi-hourglass-split', Recebida: 'bi-check-circle',
     Vencida: 'bi-exclamation-triangle', Cancelada: 'bi-slash-circle',
   };
   return (
@@ -32,28 +32,28 @@ function StatusBadge({ status }: { status: ContaPagarDto['status'] }) {
   );
 }
 
-export function ContasPagarPage() {
-  const [modalAberto, setModalAberto]   = useState(false);
-  const [erroForm, setErroForm]         = useState<string | null>(null);
-  const [pagandoId, setPagandoId]       = useState<number | null>(null);
-  const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().slice(0, 10));
+export function ContasReceberPage() {
+  const [modalAberto, setModalAberto]     = useState(false);
+  const [erroForm, setErroForm]           = useState<string | null>(null);
+  const [recebendoId, setRecebendoId]     = useState<number | null>(null);
+  const [dataRecebimento, setDataRecebimento] = useState(new Date().toISOString().slice(0, 10));
 
-  const { data: contas = [], isLoading, isError, error } = useContasPagar(CD_FILIAL);
-  const criar   = useCriarContaPagar();
-  const pagar   = usePagarConta();
-  const cancelar = useCancelarConta();
+  const { data: contas = [], isLoading, isError, error } = useContasReceber(CD_FILIAL);
+  const criar   = useCriarContaReceber();
+  const receber  = useReceberConta();
+  const cancelar = useCancelarContaReceber();
 
-  const totalAberto  = contas.filter(c => c.status === 'Aberta').reduce((s, c) => s + c.valor, 0);
-  const totalVencido = contas.filter(c => c.status === 'Vencida').reduce((s, c) => s + c.valor, 0);
-  const totalPago    = contas.filter(c => c.status === 'Paga').reduce((s, c) => s + c.valor, 0);
+  const totalAberto   = contas.filter(c => c.status === 'Aberta').reduce((s, c) => s + c.valor, 0);
+  const totalVencido  = contas.filter(c => c.status === 'Vencida').reduce((s, c) => s + c.valor, 0);
+  const totalRecebido = contas.filter(c => c.status === 'Recebida').reduce((s, c) => s + (c.valorRecebido ?? c.valor), 0);
 
   const contasOrdenadas = [...contas].sort((a, b) => {
-    const ord: Record<string, number> = { Vencida: 0, Aberta: 1, Paga: 2, Cancelada: 3 };
+    const ord: Record<string, number> = { Vencida: 0, Aberta: 1, Recebida: 2, Cancelada: 3 };
     if (ord[a.status] !== ord[b.status]) return ord[a.status] - ord[b.status];
     return a.vencimento.localeCompare(b.vencimento);
   });
 
-  const handleSalvar = async (dados: { descricao: string; valor: number; vencimento: string }) => {
+  const handleSalvar = async (dados: { descricao: string; valor: number; vencimento: string; documentoOrigem?: string }) => {
     setErroForm(null);
     try {
       await criar.mutateAsync({ ...dados, cdFilial: CD_FILIAL });
@@ -63,24 +63,23 @@ export function ContasPagarPage() {
     }
   };
 
-  const handlePagar = async (id: number) => {
-    try { await pagar.mutateAsync({ id, dataPagamento }); setPagandoId(null); }
+  const handleReceber = async (id: number) => {
+    try { await receber.mutateAsync({ id, dataRecebimento }); setRecebendoId(null); }
     catch {/* toast */}
   };
 
   const handleCancelar = async (id: number) => {
-    if (!confirm('Cancelar esta conta a pagar?')) return;
+    if (!confirm('Cancelar esta conta a receber?')) return;
     try { await cancelar.mutateAsync(id); } catch {/* toast */}
   };
 
   return (
     <>
-      {/* Métricas */}
       <div className="row g-3 mb-4">
         {[
-          { label: 'Em aberto',  value: brl(totalAberto),  color: '#1565c0' },
-          { label: 'Vencidas',   value: brl(totalVencido), color: '#c62828' },
-          { label: 'Pagas',      value: brl(totalPago),    color: '#2e7d32' },
+          { label: 'A receber',  value: brl(totalAberto),   color: '#1565c0' },
+          { label: 'Vencidas',   value: brl(totalVencido),  color: '#c62828' },
+          { label: 'Recebidas',  value: brl(totalRecebido), color: '#2e7d32' },
         ].map(m => (
           <div key={m.label} className="col-md-4">
             <div className="amr-metric-card">
@@ -91,7 +90,6 @@ export function ContasPagarPage() {
         ))}
       </div>
 
-      {/* Tabela */}
       <div className="amr-table-card">
         <div className="d-flex align-items-center justify-content-between px-3 py-3 border-bottom">
           <span style={{ fontSize: 13, fontWeight: 600, color: '#495057' }}>
@@ -114,7 +112,7 @@ export function ContasPagarPage() {
 
         {isError && (
           <div className="p-3">
-            <AlertaErro mensagem={(error as Error)?.message ?? 'Erro ao carregar contas a pagar.'} />
+            <AlertaErro mensagem={(error as Error)?.message ?? 'Erro ao carregar contas a receber.'} />
           </div>
         )}
 
@@ -122,7 +120,6 @@ export function ContasPagarPage() {
           <div className="amr-empty">
             <i className="bi bi-inbox"></i>
             <div style={{ fontSize: 14, fontWeight: 500 }}>Nenhuma conta registrada</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>Clique em "Nova Conta" para começar</div>
           </div>
         )}
 
@@ -132,8 +129,9 @@ export function ContasPagarPage() {
               <thead className="table-light">
                 <tr>
                   <th>Descrição</th>
+                  <th>Doc. Origem</th>
                   <th>Vencimento</th>
-                  <th>Pagamento</th>
+                  <th>Recebimento</th>
                   <th>Status</th>
                   <th className="text-end">Valor</th>
                   <th className="text-end">Ações</th>
@@ -143,34 +141,29 @@ export function ContasPagarPage() {
                 {contasOrdenadas.map(c => (
                   <tr key={c.id}>
                     <td>{c.descricao}</td>
+                    <td className="text-muted" style={{ fontSize: 12 }}>{c.documentoOrigem ?? '—'}</td>
                     <td className="text-nowrap">{fmt(c.vencimento)}</td>
-                    <td className="text-nowrap text-muted">{c.dataPagamento ? fmt(c.dataPagamento) : '—'}</td>
+                    <td className="text-nowrap text-muted">{c.dataRecebimento ? fmt(c.dataRecebimento) : '—'}</td>
                     <td><StatusBadge status={c.status} /></td>
-                    <td className="text-end fw-semibold">{brl(c.valor)}</td>
+                    <td className="text-end fw-semibold">{brl(c.valorRecebido ?? c.valor)}</td>
                     <td className="text-end text-nowrap">
                       {(c.status === 'Aberta' || c.status === 'Vencida') && (
-                        pagandoId === c.id ? (
+                        recebendoId === c.id ? (
                           <div className="d-flex align-items-center justify-content-end gap-1">
                             <input
                               type="date"
-                              value={dataPagamento}
-                              onChange={e => setDataPagamento(e.target.value)}
+                              value={dataRecebimento}
+                              onChange={e => setDataRecebimento(e.target.value)}
                               className="form-control form-control-sm"
                               style={{ width: 130 }}
                             />
-                            <button onClick={() => handlePagar(c.id)} className="btn btn-sm btn-success">✓</button>
-                            <button onClick={() => setPagandoId(null)} className="btn btn-sm btn-outline-secondary">✕</button>
+                            <button onClick={() => handleReceber(c.id)} className="btn btn-sm btn-success">✓</button>
+                            <button onClick={() => setRecebendoId(null)} className="btn btn-sm btn-outline-secondary">✕</button>
                           </div>
                         ) : (
                           <>
-                            <button
-                              onClick={() => setPagandoId(c.id)}
-                              className="btn btn-sm btn-outline-success me-1"
-                            >Pagar</button>
-                            <button
-                              onClick={() => handleCancelar(c.id)}
-                              className="btn btn-sm btn-outline-danger"
-                            >Cancelar</button>
+                            <button onClick={() => setRecebendoId(c.id)} className="btn btn-sm btn-outline-success me-1">Receber</button>
+                            <button onClick={() => handleCancelar(c.id)} className="btn btn-sm btn-outline-danger">Cancelar</button>
                           </>
                         )
                       )}
@@ -183,9 +176,9 @@ export function ContasPagarPage() {
         )}
       </div>
 
-      <Modal titulo="Nova Conta a Pagar" aberto={modalAberto} onFechar={() => setModalAberto(false)}>
+      <Modal titulo="Nova Conta a Receber" aberto={modalAberto} onFechar={() => setModalAberto(false)}>
         {erroForm && <div className="mb-3"><AlertaErro mensagem={erroForm} /></div>}
-        <ContaPagarForm
+        <ContaReceberForm
           onSalvar={handleSalvar}
           onCancelar={() => setModalAberto(false)}
           carregando={criar.isPending}

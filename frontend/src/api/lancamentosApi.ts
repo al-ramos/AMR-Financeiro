@@ -28,23 +28,23 @@ export interface CriarLancamentoPayload {
 export const lancamentosApi = {
   getAll: (cdFilial: number) =>
     api
-      .get<LancamentoFinanceiroDto[]>('/api/lancamentos', { params: { cdFilial } })
+      .get<LancamentoFinanceiroDto[]>('/lancamentos', { params: { cdFilial } })
       .then((r: { data: LancamentoFinanceiroDto[] }) => r.data),
 
   getByPeriodo: (cdFilial: number, inicio: string, fim: string) =>
     api
-      .get<LancamentoFinanceiroDto[]>('/api/lancamentos/periodo', {
+      .get<LancamentoFinanceiroDto[]>('/lancamentos/periodo', {
         params: { cdFilial, inicio, fim },
       })
       .then((r: { data: LancamentoFinanceiroDto[] }) => r.data),
 
   getById: (id: number) =>
     api
-      .get<LancamentoFinanceiroDto>(`/api/lancamentos/${id}`)
+      .get<LancamentoFinanceiroDto>(`/lancamentos/${id}`)
       .then((r: { data: LancamentoFinanceiroDto }) => r.data),
 
   criar: (payload: CriarLancamentoPayload) =>
     api
-      .post<{ id: number }>('/api/lancamentos', payload)
+      .post<{ id: number }>('/lancamentos', payload)
       .then((r: { data: { id: number } }) => r.data),
 };

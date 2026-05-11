@@ -1,11 +1,10 @@
-interface Props {
-  mensagem: string;
-}
+interface Props { mensagem: string; }
 
 export function AlertaErro({ mensagem }: Props) {
   return (
-    <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-      ⚠ {mensagem}
+    <div className="alert alert-danger d-flex align-items-center gap-2 py-2 mb-0" style={{ fontSize: 13 }}>
+      <i className="bi bi-exclamation-triangle-fill"></i>
+      {mensagem}
     </div>
   );
 }

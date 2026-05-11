@@ -11,95 +11,55 @@ export function PlanoContasLinha({ node, onEditar, onToggleAtivo }: Props) {
   const [aberto, setAberto] = useState(node.nivel <= 1);
   const temFilhos = node.filhos.length > 0;
 
-  const indentPx = node.nivel * 20;
-
   return (
     <>
-      <tr className={`group border-b border-gray-100 hover:bg-blue-50/40 transition-colors ${!node.ativo ? 'opacity-50' : ''}`}>
-        {/* Código */}
-        <td className="px-4 py-2 whitespace-nowrap">
-          <div className="flex items-center gap-1" style={{ paddingLeft: indentPx }}>
+      <tr style={{ opacity: node.ativo ? 1 : 0.5 }}>
+        <td className="text-nowrap">
+          <div className="d-flex align-items-center gap-1" style={{ paddingLeft: node.nivel * 20 }}>
             {temFilhos ? (
               <button
                 onClick={() => setAberto(a => !a)}
-                className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-colors shrink-0"
-                aria-label={aberto ? 'Recolher' : 'Expandir'}
+                className="btn btn-sm p-0"
+                style={{ fontSize: 11, lineHeight: 1, color: '#6c757d', minWidth: 16 }}
               >
-                {aberto ? '▾' : '▸'}
+                <i className={`bi ${aberto ? 'bi-chevron-down' : 'bi-chevron-right'}`}></i>
               </button>
             ) : (
-              <span className="w-5 shrink-0" />
+              <span style={{ minWidth: 16, display: 'inline-block' }}></span>
             )}
-            <span className="font-mono text-sm text-gray-600">{node.codigo}</span>
+            <span className="font-monospace text-muted" style={{ fontSize: 12 }}>{node.codigo}</span>
           </div>
         </td>
-
-        {/* Descrição */}
-        <td className="px-4 py-2 text-sm text-gray-800">
-          <span className={node.tipo === 'Sintetica' ? 'font-semibold' : ''}>
-            {node.descricao}
-          </span>
+        <td className={node.tipo === 'Sintetica' ? 'fw-semibold' : ''}>{node.descricao}</td>
+        <td>
+          {node.tipo === 'Sintetica'
+            ? <span className="badge rounded-pill" style={{ background: '#ede9fe', color: '#5b21b6', fontSize: 11, padding: '3px 9px' }}>Sintética</span>
+            : <span className="badge rounded-pill" style={{ background: '#d1fae5', color: '#065f46', fontSize: 11, padding: '3px 9px' }}>Analítica</span>
+          }
         </td>
-
-        {/* Tipo */}
-        <td className="px-4 py-2 text-sm">
-          {node.tipo === 'Sintetica' ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-              Sintética
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-              Analítica
-            </span>
-          )}
+        <td>
+          {node.ativo
+            ? <span className="badge badge-paga rounded-pill" style={{ fontSize: 11, padding: '3px 9px' }}>Ativo</span>
+            : <span className="badge badge-cancelada rounded-pill" style={{ fontSize: 11, padding: '3px 9px' }}>Inativo</span>
+          }
         </td>
-
-        {/* Status */}
-        <td className="px-4 py-2 text-sm">
-          {node.ativo ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-              Ativo
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-              Inativo
-            </span>
-          )}
-        </td>
-
-        {/* Ações */}
-        <td className="px-4 py-2 text-right whitespace-nowrap">
-          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => onEditar(node.id)}
-              className="px-2 py-1 text-xs rounded-md border border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => onToggleAtivo(node.id, node.ativo)}
-              className={`px-2 py-1 text-xs rounded-md border transition-colors ${
-                node.ativo
-                  ? 'border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-600'
-                  : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700'
-              }`}
-            >
-              {node.ativo ? 'Inativar' : 'Ativar'}
-            </button>
-          </div>
+        <td className="text-end text-nowrap">
+          <button onClick={() => onEditar(node.id)} className="btn btn-sm btn-outline-secondary me-1" style={{ fontSize: 11 }}>
+            <i className="bi bi-pencil me-1"></i>Editar
+          </button>
+          <button
+            onClick={() => onToggleAtivo(node.id, node.ativo)}
+            className={`btn btn-sm ${node.ativo ? 'btn-outline-danger' : 'btn-outline-success'}`}
+            style={{ fontSize: 11 }}
+          >
+            {node.ativo ? 'Inativar' : 'Ativar'}
+          </button>
         </td>
       </tr>
 
-      {/* Filhos (recursivo) */}
-      {aberto &&
-        node.filhos.map(filho => (
-          <PlanoContasLinha
-            key={filho.id}
-            node={filho}
-            onEditar={onEditar}
-            onToggleAtivo={onToggleAtivo}
-          />
-        ))}
+      {aberto && node.filhos.map(filho => (
+        <PlanoContasLinha key={filho.id} node={filho} onEditar={onEditar} onToggleAtivo={onToggleAtivo} />
+      ))}
     </>
   );
 }

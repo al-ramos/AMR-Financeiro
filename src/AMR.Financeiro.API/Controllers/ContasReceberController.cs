@@ -1,0 +1,53 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using AMR.Financeiro.Application.Features.ContasReceber.Commands;
+using AMR.Financeiro.Application.Features.ContasReceber.Queries;
+
+namespace AMR.Financeiro.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ContasReceberController(IMediator mediator) : ControllerBase
+{
+    // GET api/contasreceber?cdFilial=1
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] int cdFilial, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetContasReceberQuery(cdFilial), ct);
+        return Ok(result);
+    }
+
+    // GET api/contasreceber/5
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetContaReceberByIdQuery(id), ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    // POST api/contasreceber
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CriarContaReceberCommand cmd, CancellationToken ct)
+    {
+        var id = await mediator.Send(cmd, ct);
+        return CreatedAtAction(nameof(GetById), new { id }, new { id });
+    }
+
+    // PATCH api/contasreceber/5/receber
+    [HttpPatch("{id:int}/receber")]
+    public async Task<IActionResult> Receber(int id, [FromBody] ReceberContaRequest req, CancellationToken ct)
+    {
+        var ok = await mediator.Send(new ReceberContaCommand(id, req.DataRecebimento, req.ValorRecebido), ct);
+        return ok ? NoContent() : NotFound();
+    }
+
+    // PATCH api/contasreceber/5/cancelar
+    [HttpPatch("{id:int}/cancelar")]
+    public async Task<IActionResult> Cancelar(int id, CancellationToken ct)
+    {
+        var ok = await mediator.Send(new CancelarContaReceberCommand(id), ct);
+        return ok ? NoContent() : NotFound();
+    }
+}
+
+public record ReceberContaRequest(DateOnly DataRecebimento, decimal? ValorRecebido = null);

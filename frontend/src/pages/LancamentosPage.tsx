@@ -15,43 +15,32 @@ function getMesAtual() {
   return { inicio: `${y}-${m}-01`, fim: `${y}-${m}-${new Date(y, now.getMonth() + 1, 0).getDate()}` };
 }
 
-function formatDate(iso: string) {
+function fmt(iso: string) {
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
 }
 
-function formatValor(v: number) {
+function brl(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function TipoBadge({ tipo }: { tipo: LancamentoFinanceiroDto['tipo'] }) {
-  if (tipo === 'Credito') {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        + Credito
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-      - Debito
-    </span>
-  );
+  return tipo === 'Credito'
+    ? <span className="badge badge-paga rounded-pill" style={{ fontSize: 11, padding: '4px 10px' }}><i className="bi bi-plus me-1"></i>Crédito</span>
+    : <span className="badge badge-vencida rounded-pill" style={{ fontSize: 11, padding: '4px 10px' }}><i className="bi bi-dash me-1"></i>Débito</span>;
 }
 
 function OrigemBadge({ origem }: { origem: LancamentoFinanceiroDto['origem'] }) {
-  const map: Record<string, string> = {
-    Manual: 'bg-gray-100 text-gray-600',
-    ContaPagar: 'bg-orange-50 text-orange-700',
-    ContaReceber: 'bg-blue-50 text-blue-700',
+  const cls: Record<string, string> = {
+    Manual: 'badge-cancelada',
+    ContaPagar: 'badge-pendente',
+    ContaReceber: 'badge-aberta',
   };
   const label: Record<string, string> = {
-    Manual: 'Manual',
-    ContaPagar: 'Ct. Pagar',
-    ContaReceber: 'Ct. Receber',
+    Manual: 'Manual', ContaPagar: 'Ct. Pagar', ContaReceber: 'Ct. Receber',
   };
   return (
-    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${map[origem] ?? ''}`}>
+    <span className={`badge rounded-pill ${cls[origem] ?? 'badge-cancelada'}`} style={{ fontSize: 11, padding: '4px 10px' }}>
       {label[origem] ?? origem}
     </span>
   );
@@ -60,188 +49,145 @@ function OrigemBadge({ origem }: { origem: LancamentoFinanceiroDto['origem'] }) 
 export function LancamentosPage() {
   const mesAtual = getMesAtual();
   const [inicio, setInicio] = useState(mesAtual.inicio);
-  const [fim, setFim] = useState(mesAtual.fim);
+  const [fim, setFim]       = useState(mesAtual.fim);
   const [modalAberto, setModalAberto] = useState(false);
-  const [erroForm, setErroForm] = useState<string | null>(null);
+  const [erroForm, setErroForm]       = useState<string | null>(null);
 
   const { data: lancamentos = [], isLoading, isError, error } = useLancamentosPorPeriodo(CD_FILIAL, inicio, fim);
   const { data: contas = [] } = usePlanoContasLista();
   const criar = useCriarLancamento();
 
-  const totalCredito = lancamentos.filter(l => l.tipo === 'Credito').reduce((s: number, l: LancamentoFinanceiroDto) => s + l.valor, 0);
-  const totalDebito = lancamentos.filter(l => l.tipo === 'Debito').reduce((s: number, l: LancamentoFinanceiroDto) => s + l.valor, 0);
+  const totalCredito = lancamentos.filter(l => l.tipo === 'Credito').reduce((s, l) => s + l.valor, 0);
+  const totalDebito  = lancamentos.filter(l => l.tipo === 'Debito').reduce((s, l) => s + l.valor, 0);
   const saldo = totalCredito - totalDebito;
 
-  const lancamentosOrdenados = [...lancamentos].sort(
+  const ordenados = [...lancamentos].sort(
     (a, b) => new Date(b.dataLancamento).getTime() - new Date(a.dataLancamento).getTime()
   );
 
-  const abrirModal = () => {
-    setErroForm(null);
-    setModalAberto(true);
-  };
-
-  const fecharModal = () => {
-    setModalAberto(false);
-    setErroForm(null);
-  };
-
   const handleSalvar = async (dados: {
-    planoContasId: number;
-    tipo: 'Debito' | 'Credito';
-    valor: number;
-    dataLancamento: string;
-    historico: string;
+    planoContasId: number; tipo: 'Debito' | 'Credito';
+    valor: number; dataLancamento: string; historico: string;
   }) => {
     setErroForm(null);
     try {
       await criar.mutateAsync({ ...dados, cdFilial: CD_FILIAL });
-      fecharModal();
+      setModalAberto(false);
     } catch (e: unknown) {
-      const msg =
-        (e as { response?: { data?: { erro?: string } } })?.response?.data?.erro ??
-        'Erro ao registrar o lancamento. Verifique os dados e tente novamente.';
+      const msg = (e as { response?: { data?: { erro?: string } } })?.response?.data?.erro
+        ?? 'Erro ao registrar o lançamento.';
       setErroForm(msg);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Lancamentos</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Movimentacao financeira -- Filial {CD_FILIAL}</p>
+    <>
+      {/* Filtro de período */}
+      <div className="amr-metric-card d-flex flex-wrap align-items-end gap-3 mb-4">
+        <div>
+          <label className="form-label form-label-sm mb-1" style={{ fontSize: 11, color: '#6c757d' }}>De</label>
+          <input type="date" value={inicio} onChange={e => setInicio(e.target.value)} className="form-control form-control-sm" />
+        </div>
+        <div>
+          <label className="form-label form-label-sm mb-1" style={{ fontSize: 11, color: '#6c757d' }}>Até</label>
+          <input type="date" value={fim} onChange={e => setFim(e.target.value)} className="form-control form-control-sm" />
+        </div>
+        <span style={{ fontSize: 12, color: '#adb5bd' }}>
+          {lancamentos.length} lançamento{lancamentos.length !== 1 ? 's' : ''} no período
+        </span>
+      </div>
+
+      {/* Cards resumo */}
+      <div className="row g-3 mb-4">
+        {[
+          { label: 'Total créditos', value: brl(totalCredito), color: '#2e7d32' },
+          { label: 'Total débitos',  value: brl(totalDebito),  color: '#c62828' },
+          { label: 'Saldo do período', value: brl(saldo),      color: saldo >= 0 ? '#2e7d32' : '#c62828' },
+        ].map(m => (
+          <div key={m.label} className="col-md-4">
+            <div className="amr-metric-card">
+              <p className="amr-metric-label">{m.label}</p>
+              <p className="amr-metric-value" style={{ color: m.color }}>{m.value}</p>
+            </div>
           </div>
-          <button
-            onClick={abrirModal}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
-          >
-            + Novo Lancamento
+        ))}
+      </div>
+
+      {/* Tabela */}
+      <div className="amr-table-card">
+        <div className="d-flex align-items-center justify-content-between px-3 py-3 border-bottom">
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#495057' }}>
+            <i className="bi bi-journal-text me-2"></i>Movimentos · Filial {CD_FILIAL}
+          </span>
+          <button className="btn btn-sm btn-primary" onClick={() => { setErroForm(null); setModalAberto(true); }}>
+            <i className="bi bi-plus-lg me-1"></i>Novo Lançamento
           </button>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6">
-        {/* Filtro de periodo */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex flex-wrap items-end gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">De</label>
-            <input
-              type="date"
-              value={inicio}
-              onChange={e => setInicio(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        {isLoading && (
+          <div className="amr-empty">
+            <div className="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+            <span style={{ fontSize: 13 }}>Carregando...</span>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Ate</label>
-            <input
-              type="date"
-              value={fim}
-              onChange={e => setFim(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        )}
+
+        {isError && (
+          <div className="p-3">
+            <AlertaErro mensagem={(error as Error)?.message ?? 'Erro ao carregar lançamentos.'} />
           </div>
-          <p className="text-xs text-gray-400 self-center">
-            {lancamentos.length} lancamento{lancamentos.length !== 1 ? 's' : ''} no periodo
-          </p>
-        </div>
+        )}
 
-        {/* Cards resumo */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Total Creditos</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{formatValor(totalCredito)}</p>
+        {!isLoading && !isError && ordenados.length === 0 && (
+          <div className="amr-empty">
+            <i className="bi bi-inbox"></i>
+            <div style={{ fontSize: 14, fontWeight: 500 }}>Nenhum lançamento no período</div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Total Debitos</p>
-            <p className="text-2xl font-bold text-red-500 mt-1">{formatValor(totalDebito)}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Saldo do Periodo</p>
-            <p className={`text-2xl font-bold mt-1 ${saldo >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              {formatValor(saldo)}
-            </p>
-          </div>
-        </div>
+        )}
 
-        {/* Tabela */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {isLoading && (
-            <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
-              <svg className="animate-spin h-5 w-5 mr-2 text-blue-500" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              Carregando lancamentos...
-            </div>
-          )}
-
-          {isError && (
-            <div className="p-6">
-              <AlertaErro mensagem={(error as Error)?.message ?? 'Erro ao carregar os lancamentos.'} />
-            </div>
-          )}
-
-          {!isLoading && !isError && lancamentosOrdenados.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <p className="text-sm font-medium">Nenhum lancamento no periodo</p>
-              <p className="text-xs mt-1">Clique em "Novo Lancamento" para registrar</p>
-            </div>
-          )}
-
-          {!isLoading && lancamentosOrdenados.length > 0 && (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/70">
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Data</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-40">Conta</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Historico</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-28">Tipo</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Origem</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-32 text-right">Valor</th>
+        {!isLoading && ordenados.length > 0 && (
+          <div className="table-responsive">
+            <table className="table table-hover table-sm mb-0" style={{ fontSize: 13 }}>
+              <thead className="table-light">
+                <tr>
+                  <th>Data</th>
+                  <th>Conta</th>
+                  <th>Histórico</th>
+                  <th>Tipo</th>
+                  <th>Origem</th>
+                  <th className="text-end">Valor</th>
                 </tr>
               </thead>
               <tbody>
-                {lancamentosOrdenados.map(l => (
-                  <tr key={l.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-600 tabular-nums">{formatDate(l.dataLancamento)}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono text-gray-500">{l.planoContasCodigo}</span>
-                      <span className="text-xs text-gray-700 ml-1">{l.planoContasDescricao}</span>
+                {ordenados.map(l => (
+                  <tr key={l.id}>
+                    <td className="text-nowrap">{fmt(l.dataLancamento)}</td>
+                    <td>
+                      <span className="font-monospace text-muted" style={{ fontSize: 11 }}>{l.planoContasCodigo}</span>
+                      <span className="ms-1" style={{ fontSize: 12 }}>{l.planoContasDescricao}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{l.historico}</td>
-                    <td className="px-4 py-3">
-                      <TipoBadge tipo={l.tipo} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <OrigemBadge origem={l.origem} />
-                    </td>
-                    <td className={`px-4 py-3 text-sm font-semibold text-right tabular-nums ${l.tipo === 'Credito' ? 'text-emerald-600' : 'text-red-500'}`}>
-                      {l.tipo === 'Credito' ? '+' : '-'} {formatValor(l.valor)}
+                    <td>{l.historico}</td>
+                    <td><TipoBadge tipo={l.tipo} /></td>
+                    <td><OrigemBadge origem={l.origem} /></td>
+                    <td className={`text-end fw-semibold ${l.tipo === 'Credito' ? 'text-success' : 'text-danger'}`}>
+                      {l.tipo === 'Credito' ? '+' : '−'} {brl(l.valor)}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      </main>
-
-      <Modal titulo="Novo Lancamento" aberto={modalAberto} onFechar={fecharModal}>
-        {erroForm && (
-          <div className="mb-4">
-            <AlertaErro mensagem={erroForm} />
           </div>
         )}
+      </div>
+
+      <Modal titulo="Novo Lançamento" aberto={modalAberto} onFechar={() => { setModalAberto(false); setErroForm(null); }}>
+        {erroForm && <div className="mb-3"><AlertaErro mensagem={erroForm} /></div>}
         <LancamentoForm
           contas={contas}
           onSalvar={handleSalvar}
-          onCancelar={fecharModal}
+          onCancelar={() => { setModalAberto(false); setErroForm(null); }}
           carregando={criar.isPending}
         />
       </Modal>
-    </div>
+    </>
   );
 }
