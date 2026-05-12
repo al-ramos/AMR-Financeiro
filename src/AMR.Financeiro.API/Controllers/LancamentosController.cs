@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AMR.Financeiro.Application.Features.Lancamentos.Commands;
 using AMR.Financeiro.Application.Features.Lancamentos.Queries;
 
 namespace AMR.Financeiro.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class LancamentosController(IMediator mediator) : ControllerBase

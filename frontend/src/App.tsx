@@ -1,8 +1,10 @@
-import { BrowserRouter, Route, Routes, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { PlanoContasPage } from './pages/PlanoContasPage';
 import { LancamentosPage } from './pages/LancamentosPage';
 import { ContasPagarPage } from './pages/ContasPagarPage';
 import { ContasReceberPage } from './pages/ContasReceberPage';
+import { LoginPage } from './pages/LoginPage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const NAV = [
   {
@@ -14,7 +16,7 @@ const NAV = [
   {
     section: 'Movimento',
     items: [
-      { to: '/lancamentos',    icon: 'bi-journal-text',  label: 'Lançamentos' },
+      { to: '/lancamentos',    icon: 'bi-journal-text',    label: 'Lançamentos' },
       { to: '/contas-pagar',   icon: 'bi-arrow-up-circle', label: 'Contas a Pagar' },
       { to: '/contas-receber', icon: 'bi-arrow-down-circle', label: 'Contas a Receber' },
     ],
@@ -28,15 +30,23 @@ const NAV = [
 ];
 
 const PAGE_LABELS: Record<string, { title: string; subtitle: string }> = {
-  '/':               { title: 'Lançamentos',       subtitle: 'Histórico de movimentos' },
-  '/lancamentos':    { title: 'Lançamentos',       subtitle: 'Histórico de movimentos' },
-  '/plano-contas':   { title: 'Plano de Contas',   subtitle: 'Estrutura contábil' },
-  '/contas-pagar':   { title: 'Contas a Pagar',    subtitle: 'Controle de obrigações' },
-  '/contas-receber': { title: 'Contas a Receber',  subtitle: 'Controle de recebimentos' },
-  '/dashboard':      { title: 'Dashboard',         subtitle: 'Visão gerencial' },
+  '/':               { title: 'Lançamentos',      subtitle: 'Histórico de movimentos' },
+  '/lancamentos':    { title: 'Lançamentos',      subtitle: 'Histórico de movimentos' },
+  '/plano-contas':   { title: 'Plano de Contas',  subtitle: 'Estrutura contábil' },
+  '/contas-pagar':   { title: 'Contas a Pagar',   subtitle: 'Controle de obrigações' },
+  '/contas-receber': { title: 'Contas a Receber', subtitle: 'Controle de recebimentos' },
+  '/dashboard':      { title: 'Dashboard',        subtitle: 'Visão gerencial' },
 };
 
+// ── Guard de rota autenticada ──────────────────────────────────────────────────
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
 function Sidebar() {
+  const { username, logout } = useAuth();
   return (
     <nav className="amr-sidebar">
       <a href="/" className="amr-sidebar-brand">
@@ -59,18 +69,33 @@ function Sidebar() {
             width: 30, height: 30, borderRadius: '50%',
             background: 'var(--amr-sidebar-active)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 12, fontWeight: 700, color: '#fff'
-          }}>A</div>
-          <div>
-            <div style={{ fontSize: 12, color: '#cfd8dc', fontWeight: 500 }}>AMR Sistema</div>
+            fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
+          }}>
+            {(username?.[0] ?? 'A').toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: '#cfd8dc', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {username ?? 'Usuário'}
+            </div>
             <div style={{ fontSize: 10, color: '#546e7a' }}>Financeiro</div>
           </div>
+          <button
+            onClick={logout}
+            title="Sair do sistema"
+            style={{
+              background: 'none', border: 'none', padding: '2px 4px',
+              cursor: 'pointer', color: '#546e7a', fontSize: 15,
+            }}
+          >
+            <i className="bi bi-box-arrow-right"></i>
+          </button>
         </div>
       </div>
     </nav>
   );
 }
 
+// ── Topbar ─────────────────────────────────────────────────────────────────────
 function Topbar() {
   const loc = useLocation();
   const info = PAGE_LABELS[loc.pathname] ?? { title: 'AMR Financeiro', subtitle: '' };
@@ -98,25 +123,42 @@ function EmConstrucao({ titulo }: { titulo: string }) {
   );
 }
 
+// ── Layout autenticado ─────────────────────────────────────────────────────────
+function AppLayout() {
+  return (
+    <div className="amr-wrapper">
+      <Sidebar />
+      <div className="amr-content-wrapper">
+        <Topbar />
+        <main className="amr-content">
+          <Routes>
+            <Route path="/"                element={<LancamentosPage />} />
+            <Route path="/plano-contas"    element={<PlanoContasPage />} />
+            <Route path="/lancamentos"     element={<LancamentosPage />} />
+            <Route path="/contas-pagar"    element={<ContasPagarPage />} />
+            <Route path="/contas-receber"  element={<ContasReceberPage />} />
+            <Route path="/dashboard"       element={<EmConstrucao titulo="Dashboard" />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// ── App root ───────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="amr-wrapper">
-        <Sidebar />
-        <div className="amr-content-wrapper">
-          <Topbar />
-          <main className="amr-content">
-            <Routes>
-              <Route path="/"                element={<LancamentosPage />} />
-              <Route path="/plano-contas"    element={<PlanoContasPage />} />
-              <Route path="/lancamentos"     element={<LancamentosPage />} />
-              <Route path="/contas-pagar"    element={<ContasPagarPage />} />
-              <Route path="/contas-receber"  element={<ContasReceberPage />} />
-              <Route path="/dashboard"       element={<EmConstrucao titulo="Dashboard" />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/*" element={
+            <RequireAuth>
+              <AppLayout />
+            </RequireAuth>
+          } />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

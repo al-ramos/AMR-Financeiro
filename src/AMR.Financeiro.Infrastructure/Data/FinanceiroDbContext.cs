@@ -9,6 +9,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<ContaReceber> ContasReceber => Set<ContaReceber>();
     public DbSet<PlanoContas> PlanoContas => Set<PlanoContas>();
     public DbSet<LancamentoFinanceiro> Lancamentos => Set<LancamentoFinanceiro>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -62,6 +63,17 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
              .WithMany(x => x.Lancamentos)
              .HasForeignKey(x => x.PlanoContasId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Usuario
+        mb.Entity<Usuario>(e =>
+        {
+            e.ToTable("Usuarios");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Username).HasMaxLength(100).IsRequired();
+            e.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Role).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => x.Username).IsUnique();
         });
     }
 }

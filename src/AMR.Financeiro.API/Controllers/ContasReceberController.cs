@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AMR.Financeiro.Application.Features.ContasReceber.Commands;
 using AMR.Financeiro.Application.Features.ContasReceber.Queries;
 
 namespace AMR.Financeiro.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ContasReceberController(IMediator mediator) : ControllerBase
