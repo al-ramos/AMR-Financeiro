@@ -3,6 +3,7 @@ using AMR.Financeiro.Domain.Enums;
 using AMR.Financeiro.Domain.Interfaces;
 using AMR.Financeiro.Domain.Events;
 using AMR.Financeiro.Application.Interfaces;
+using AMR.Financeiro.Application.Features.Lancamentos.Commands;
 using MediatR;
 
 namespace AMR.Financeiro.Application.Features.Lancamentos.Handlers;
