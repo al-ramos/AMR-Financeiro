@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using AMR.Financeiro.Domain.Interfaces;
 using AMR.Financeiro.Infrastructure.Data;
 using AMR.Financeiro.Infrastructure.Repositories;
+using AMR.Financeiro.Application.Interfaces;
+using AMR.Financeiro.Infrastructure.Messaging;
 
 namespace AMR.Financeiro.Infrastructure;
 
@@ -22,6 +24,8 @@ public static class DependencyInjection
         services.AddScoped<IPlanoContasRepository, PlanoContasRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddSingleton<IEventPublisher, RabbitMqPublisher>();
 
         return services;
     }

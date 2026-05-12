@@ -1,24 +1,21 @@
+version: '3.9'
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: amr_financeiro_api
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: amr-rabbitmq
     ports:
-      - "5015:8080"
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-      ConnectionStrings__DefaultConnection: "Server=host.docker.internal,1433;Database=AMR.Financeiro;User Id=rds_app;Password=844932;TrustServerCertificate=True;MultipleActiveResultSets=true"
-      Financeiro__BaseUrl: "http://api:8080"
-    restart: unless-stopped
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  web:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: amr_financeiro_web
-    ports:
-      - "3001:80"
-    depends_on:
-      - api
-    restart: unless-stopped
+volumes:
+  rabbitmq_data:

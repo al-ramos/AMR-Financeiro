@@ -5,6 +5,7 @@
     <Project Path="src/AMR.Financeiro.Domain/AMR.Financeiro.Domain.csproj" />
     <Project Path="src/AMR.Financeiro.Infrastructure/AMR.Financeiro.Infrastructure.csproj" />
     <Project Path="src/AMR.Financeiro.Shared/AMR.Financeiro.Shared.csproj" />
+    <Project Path="src/AMR.Financeiro.Worker/AMR.Financeiro.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AMR.Financeiro.Tests/AMR.Financeiro.Tests.csproj" />
