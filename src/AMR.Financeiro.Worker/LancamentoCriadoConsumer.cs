@@ -23,7 +23,32 @@ public class LancamentoCriadoConsumer : BackgroundService
         _config = config;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                if (_channel is not { IsOpen: true })
+                    Connect();
+
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("RabbitMQ indisponivel: {Msg}. Tentando novamente em 5s...", ex.Message);
+                _channel = null;
+                _connection = null;
+                await Task.Delay(5000, stoppingToken);
+            }
+        }
+    }
+
+    private void Connect()
     {
         var factory = new ConnectionFactory
         {
@@ -31,7 +56,8 @@ public class LancamentoCriadoConsumer : BackgroundService
             Port     = int.Parse(_config["RabbitMQ:Port"] ?? "5672"),
             UserName = _config["RabbitMQ:User"] ?? "guest",
             Password = _config["RabbitMQ:Password"] ?? "guest",
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync  = true,
+            RequestedConnectionTimeout = TimeSpan.FromSeconds(5)
         };
 
         _connection = factory.CreateConnection();
@@ -56,7 +82,7 @@ public class LancamentoCriadoConsumer : BackgroundService
         };
 
         _channel.BasicConsume(Queue, false, consumer);
-        return Task.CompletedTask;
+        _logger.LogInformation("[RabbitMQ] Consumer conectado e escutando a fila '{Queue}'.", Queue);
     }
 
     public override void Dispose()
