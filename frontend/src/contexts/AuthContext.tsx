@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { login as apiLogin, type LoginRequest, type TokenResponse } from '../api/authApi';
 
 interface AuthState {

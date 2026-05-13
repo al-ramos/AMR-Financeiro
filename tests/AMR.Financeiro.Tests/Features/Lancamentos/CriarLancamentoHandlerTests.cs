@@ -1,6 +1,7 @@
 using Moq;
 using AMR.Financeiro.Application.Features.Lancamentos.Commands;
 using AMR.Financeiro.Application.Features.Lancamentos.Handlers;
+using AMR.Financeiro.Application.Interfaces;
 using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Enums;
 using AMR.Financeiro.Domain.Interfaces;
@@ -12,9 +13,10 @@ public class CriarLancamentoHandlerTests
     private readonly Mock<ILancamentoFinanceiroRepository> _repoMock = new();
     private readonly Mock<IPlanoContasRepository> _planoMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
+    private readonly Mock<IEventPublisher> _publisherMock = new();
 
     private CriarLancamentoHandler CreateHandler() =>
-        new(_repoMock.Object, _planoMock.Object, _uowMock.Object);
+        new(_repoMock.Object, _planoMock.Object, _uowMock.Object, _publisherMock.Object);
 
     [Fact]
     public async Task Handle_ValorZero_LancaInvalidOperationException()
