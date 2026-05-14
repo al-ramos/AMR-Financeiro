@@ -14,27 +14,26 @@ namespace AMR.Financeiro.Infrastructure.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
                 table: "ContasPagar",
-                type: "nvarchar(20)",
                 maxLength: 20,
                 nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(max)");
+                oldClrType: typeof(string));
 
             migrationBuilder.CreateTable(
                 name: "ContasReceber",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(type: "int", nullable: false),
-                    Descricao = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CdFilial = table.Column<int>(nullable: false),
+                    Descricao = table.Column<string>(maxLength: 200, nullable: false),
                     Valor = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     Vencimento = table.Column<DateOnly>(type: "date", nullable: false),
                     DataRecebimento = table.Column<DateOnly>(type: "date", nullable: true),
                     ValorRecebido = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    CriadoEm = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DocumentoOrigem = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    Status = table.Column<string>(maxLength: 20, nullable: false),
+                    CriadoEm = table.Column<DateTime>(nullable: false),
+                    DocumentoOrigem = table.Column<string>(maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -45,15 +44,16 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "PlanoContas",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(type: "int", nullable: false),
-                    Codigo = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Descricao = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Tipo = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    PaiId = table.Column<int>(type: "int", nullable: true),
-                    Ativo = table.Column<bool>(type: "bit", nullable: false),
-                    CriadoEm = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CdFilial = table.Column<int>(nullable: false),
+                    Codigo = table.Column<string>(maxLength: 20, nullable: false),
+                    Descricao = table.Column<string>(maxLength: 200, nullable: false),
+                    Tipo = table.Column<string>(maxLength: 20, nullable: false),
+                    PaiId = table.Column<int>(nullable: true),
+                    Ativo = table.Column<bool>(nullable: false),
+                    CriadoEm = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,17 +70,18 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "Lancamentos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(type: "int", nullable: false),
-                    PlanoContasId = table.Column<int>(type: "int", nullable: false),
-                    Tipo = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Origem = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CdFilial = table.Column<int>(nullable: false),
+                    PlanoContasId = table.Column<int>(nullable: false),
+                    Tipo = table.Column<string>(maxLength: 20, nullable: false),
+                    Origem = table.Column<string>(maxLength: 20, nullable: false),
                     Valor = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     DataLancamento = table.Column<DateOnly>(type: "date", nullable: false),
-                    Historico = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    DocumentoOrigemId = table.Column<int>(type: "int", nullable: true),
-                    CriadoEm = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Historico = table.Column<string>(maxLength: 500, nullable: false),
+                    DocumentoOrigemId = table.Column<int>(nullable: true),
+                    CriadoEm = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -125,10 +126,8 @@ namespace AMR.Financeiro.Infrastructure.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
                 table: "ContasPagar",
-                type: "nvarchar(max)",
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(20)",
                 oldMaxLength: 20);
         }
     }
