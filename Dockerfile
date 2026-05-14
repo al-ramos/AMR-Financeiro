@@ -20,6 +20,8 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
+RUN mkdir -p /app/data
+
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
