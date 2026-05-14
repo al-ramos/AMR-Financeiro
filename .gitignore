@@ -25,3 +25,11 @@ Thumbs.db
 
 # Logs
 *.log
+
+# SQLite WAL/journal files
+*.db-shm
+*.db-wal
+*.db
+
+# Claude Code
+.claude/
