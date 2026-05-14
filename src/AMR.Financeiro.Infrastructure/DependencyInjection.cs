@@ -15,8 +15,14 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        var conn = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<FinanceiroDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        {
+            if (conn.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+                options.UseSqlite(conn);
+            else
+                options.UseSqlServer(conn);
+        });
 
         services.AddScoped<IContaPagarRepository, ContaPagarRepository>();
         services.AddScoped<IContaReceberRepository, ContaReceberRepository>();

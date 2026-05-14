@@ -25,7 +25,7 @@ public class CriarLancamentoHandler(
 
         if (!plano.AceitaLancamentos())
             throw new InvalidOperationException(
-                $"A conta '{plano.Codigo} - {plano.Descricao}' e Sintetica e nao aceita lancamentos diretos. Use uma conta Analitica.");
+                $"A conta '{plano.Codigo} - {plano.Descricao}' é Sintética e não aceita lançamentos diretos. Use uma conta Analítica.");
 
         if (!plano.Ativo)
             throw new InvalidOperationException(

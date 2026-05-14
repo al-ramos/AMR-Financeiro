@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using AMR.Financeiro.Application;
@@ -79,6 +80,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+    await ctx.Database.MigrateAsync();
     await PlanoContasSeed.AplicarAsync(ctx, cdFilial: 1);
 
     // Cria usuário admin padrão se não existir

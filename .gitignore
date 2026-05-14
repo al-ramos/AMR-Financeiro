@@ -33,3 +33,11 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+.terraform.lock.hcl
