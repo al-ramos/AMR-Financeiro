@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AMR.Financeiro.Domain.Interfaces;
@@ -22,6 +23,9 @@ public static class DependencyInjection
                 options.UseSqlite(conn);
             else
                 options.UseSqlServer(conn);
+
+            options.ConfigureWarnings(w =>
+                w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddScoped<IContaPagarRepository, ContaPagarRepository>();
