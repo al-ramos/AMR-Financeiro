@@ -15,8 +15,8 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "ContasPagar",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     CdFilial = table.Column<int>(nullable: false),
                     Descricao = table.Column<string>(maxLength: 200, nullable: false),
                     Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),

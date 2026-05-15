@@ -15,8 +15,8 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    Id = table.Column<long>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Username = table.Column<string>(maxLength: 100, nullable: false),
                     PasswordHash = table.Column<string>(maxLength: 500, nullable: false),
                     Role = table.Column<string>(maxLength: 50, nullable: false),
