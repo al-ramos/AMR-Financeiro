@@ -22,15 +22,14 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "ContasReceber",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CdFilial = table.Column<int>(nullable: false),
                     Descricao = table.Column<string>(maxLength: 200, nullable: false),
-                    Valor = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Vencimento = table.Column<DateOnly>(type: "date", nullable: false),
-                    DataRecebimento = table.Column<DateOnly>(type: "date", nullable: true),
-                    ValorRecebido = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
+                    Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),
+                    Vencimento = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    DataRecebimento = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    ValorRecebido = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: true),
                     Status = table.Column<string>(maxLength: 20, nullable: false),
                     CriadoEm = table.Column<DateTime>(nullable: false),
                     DocumentoOrigem = table.Column<string>(maxLength: 100, nullable: true)
@@ -44,8 +43,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "PlanoContas",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CdFilial = table.Column<int>(nullable: false),
                     Codigo = table.Column<string>(maxLength: 20, nullable: false),
@@ -70,15 +68,14 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "Lancamentos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CdFilial = table.Column<int>(nullable: false),
                     PlanoContasId = table.Column<int>(nullable: false),
                     Tipo = table.Column<string>(maxLength: 20, nullable: false),
                     Origem = table.Column<string>(maxLength: 20, nullable: false),
-                    Valor = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    DataLancamento = table.Column<DateOnly>(type: "date", nullable: false),
+                    Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),
+                    DataLancamento = table.Column<DateOnly>(type: "TEXT", nullable: false),
                     Historico = table.Column<string>(maxLength: 500, nullable: false),
                     DocumentoOrigemId = table.Column<int>(nullable: true),
                     CriadoEm = table.Column<DateTime>(nullable: false)
@@ -132,3 +129,4 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         }
     }
 }
+

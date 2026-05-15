@@ -15,14 +15,13 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "ContasPagar",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CdFilial = table.Column<int>(nullable: false),
                     Descricao = table.Column<string>(maxLength: 200, nullable: false),
-                    Valor = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Vencimento = table.Column<DateOnly>(type: "date", nullable: false),
-                    DataPagamento = table.Column<DateOnly>(type: "date", nullable: true),
+                    Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),
+                    Vencimento = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    DataPagamento = table.Column<DateOnly>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(nullable: false),
                     CriadoEm = table.Column<DateTime>(nullable: false)
                 },
@@ -40,3 +39,4 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         }
     }
 }
+

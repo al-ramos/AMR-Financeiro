@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -15,8 +15,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                    Id = table.Column<long>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Username = table.Column<string>(maxLength: 100, nullable: false),
                     PasswordHash = table.Column<string>(maxLength: 500, nullable: false),
@@ -42,3 +41,4 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         }
     }
 }
+

@@ -34,7 +34,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly?>("DataPagamento")
                         .HasColumnType("date");
@@ -42,16 +42,16 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Valor")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("REAL");
 
                     b.Property<DateOnly>("Vencimento")
                         .HasColumnType("date");
@@ -73,7 +73,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly?>("DataRecebimento")
                         .HasColumnType("date");
@@ -81,24 +81,24 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DocumentoOrigem")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Valor")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("REAL");
 
                     b.Property<decimal?>("ValorRecebido")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("REAL");
 
                     b.Property<DateOnly>("Vencimento")
                         .HasColumnType("date");
@@ -120,7 +120,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly>("DataLancamento")
                         .HasColumnType("date");
@@ -131,12 +131,12 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Historico")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Origem")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("PlanoContasId")
                         .HasColumnType("int");
@@ -144,11 +144,11 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Valor")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
@@ -174,15 +174,15 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Codigo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("PaiId")
                         .HasColumnType("int");
@@ -190,7 +190,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -211,22 +211,22 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -267,3 +267,4 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         }
     }
 }
+

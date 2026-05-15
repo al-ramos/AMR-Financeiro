@@ -37,7 +37,7 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateOnly?>("DataPagamento")
                         .HasColumnType("date");
@@ -45,15 +45,15 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("Valor")
                         .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("REAL");
 
                     b.Property<DateOnly>("Vencimento")
                         .HasColumnType("date");
@@ -66,3 +66,4 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         }
     }
 }
+
