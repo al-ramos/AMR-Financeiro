@@ -76,7 +76,7 @@ resource "aws_ecs_task_definition" "api" {
       # Caminho do arquivo SQLite persistido no EFS
       {
         name  = "ConnectionStrings__DefaultConnection"
-        value = "Data Source=/app/data/amr.db"
+        value = "Data Source=/app/data/amr_v2.db"
       },
       # Garante que o ASP.NET Core escuta na porta correta
       {
