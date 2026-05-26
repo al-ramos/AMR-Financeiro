@@ -89,6 +89,15 @@ resource "aws_ecs_task_definition" "api" {
       }
     ]
 
+    # Secrets injetados pelo ECS via Secrets Manager — valor nunca aparece em
+    # logs nem na task definition. O ASP.NET Core lê Jwt__Key como Jwt:Key.
+    secrets = [
+      {
+        name      = "Jwt__Key"
+        valueFrom = aws_secretsmanager_secret.jwt_key.arn
+      }
+    ]
+
     # Monta o volume EFS declarado acima no caminho /app/data
     mountPoints = [{
       sourceVolume  = "sqlite-data"

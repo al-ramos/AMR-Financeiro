@@ -66,3 +66,21 @@ resource "aws_iam_role_policy" "ecs_task_efs" {
   role   = aws_iam_role.ecs_task.id
   policy = data.aws_iam_policy_document.efs_access.json
 }
+
+# ─── Permissão: ecsTaskExecutionRole → Secrets Manager ───────────────────────
+# O agente ECS (execution role) precisa buscar o secret antes de iniciar
+# o container, para injetar o valor como variável de ambiente.
+
+data "aws_iam_policy_document" "secrets_access" {
+  statement {
+    sid     = "AllowSecretsManagerRead"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [aws_secretsmanager_secret.jwt_key.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
+  name   = "${var.app_prefix}-secrets-access"
+  role   = aws_iam_role.ecs_task_execution.id
+  policy = data.aws_iam_policy_document.secrets_access.json
+}

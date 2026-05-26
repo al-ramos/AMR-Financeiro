@@ -38,6 +38,12 @@ variable "web_image_tag" {
   default     = "latest"
 }
 
+variable "jwt_key" {
+  description = "JWT signing key injetada via Secrets Manager no container da API. Nunca hardcode — passe via -var ou GitHub Secrets."
+  type        = string
+  sensitive   = true
+}
+
 variable "ecs_task_cpu" {
   description = "CPU alocada por task Fargate em unidades (256 = 0,25 vCPU)"
   type        = number

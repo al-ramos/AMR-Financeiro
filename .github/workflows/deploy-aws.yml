@@ -74,10 +74,14 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_DIR }}
+        env:
+          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
         run: terraform apply -auto-approve tfplan
 
       # Captura os outputs para reutilizar nos jobs seguintes
@@ -181,6 +185,7 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         env:
           TAG: ${{ needs.build-push.outputs.image_tag }}
+          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
         run: |
           terraform apply -auto-approve \
             -var="api_image_tag=$TAG" \
