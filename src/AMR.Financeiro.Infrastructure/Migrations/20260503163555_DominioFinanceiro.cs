@@ -32,94 +32,59 @@ namespace AMR.Financeiro.Infrastructure.Migrations
                 ALTER TABLE ""ef_temp_ContasPagar"" RENAME TO ""ContasPagar"";
             ");
 
-            migrationBuilder.CreateTable(
-                name: "ContasReceber",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(nullable: false),
-                    Descricao = table.Column<string>(maxLength: 200, nullable: false),
-                    Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),
-                    Vencimento = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    DataRecebimento = table.Column<DateOnly>(type: "TEXT", nullable: true),
-                    ValorRecebido = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: true),
-                    Status = table.Column<string>(maxLength: 20, nullable: false),
-                    CriadoEm = table.Column<DateTime>(nullable: false),
-                    DocumentoOrigem = table.Column<string>(maxLength: 100, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ContasReceber", x => x.Id);
-                });
+            // SQLite: PRIMARY KEY como constraint de tabela NÃO cria alias do rowid —
+            // o Id não é gerado automaticamente. Usar SQL direto com coluna-level PRIMARY KEY.
+            migrationBuilder.Sql(@"
+                CREATE TABLE ""ContasReceber"" (
+                    ""Id""               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""CdFilial""         INTEGER NOT NULL,
+                    ""Descricao""        TEXT    NOT NULL,
+                    ""Valor""            REAL    NOT NULL,
+                    ""Vencimento""       TEXT    NOT NULL,
+                    ""DataRecebimento""  TEXT,
+                    ""ValorRecebido""    REAL,
+                    ""Status""           TEXT    NOT NULL,
+                    ""CriadoEm""         TEXT    NOT NULL,
+                    ""DocumentoOrigem""  TEXT
+                );
 
-            migrationBuilder.CreateTable(
-                name: "PlanoContas",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(nullable: false),
-                    Codigo = table.Column<string>(maxLength: 20, nullable: false),
-                    Descricao = table.Column<string>(maxLength: 200, nullable: false),
-                    Tipo = table.Column<string>(maxLength: 20, nullable: false),
-                    PaiId = table.Column<int>(nullable: true),
-                    Ativo = table.Column<bool>(nullable: false),
-                    CriadoEm = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlanoContas", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PlanoContas_PlanoContas_PaiId",
-                        column: x => x.PaiId,
-                        principalTable: "PlanoContas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
+                CREATE TABLE ""PlanoContas"" (
+                    ""Id""        INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""CdFilial""  INTEGER NOT NULL,
+                    ""Codigo""    TEXT    NOT NULL,
+                    ""Descricao"" TEXT    NOT NULL,
+                    ""Tipo""      TEXT    NOT NULL,
+                    ""PaiId""     INTEGER,
+                    ""Ativo""     INTEGER NOT NULL,
+                    ""CriadoEm""  TEXT    NOT NULL,
+                    CONSTRAINT ""FK_PlanoContas_PlanoContas_PaiId""
+                        FOREIGN KEY (""PaiId"") REFERENCES ""PlanoContas"" (""Id"") ON DELETE RESTRICT
+                );
 
-            migrationBuilder.CreateTable(
-                name: "Lancamentos",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CdFilial = table.Column<int>(nullable: false),
-                    PlanoContasId = table.Column<int>(nullable: false),
-                    Tipo = table.Column<string>(maxLength: 20, nullable: false),
-                    Origem = table.Column<string>(maxLength: 20, nullable: false),
-                    Valor = table.Column<decimal>(type: "REAL", precision: 18, scale: 2, nullable: false),
-                    DataLancamento = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    Historico = table.Column<string>(maxLength: 500, nullable: false),
-                    DocumentoOrigemId = table.Column<int>(nullable: true),
-                    CriadoEm = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Lancamentos", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Lancamentos_PlanoContas_PlanoContasId",
-                        column: x => x.PlanoContasId,
-                        principalTable: "PlanoContas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
+                CREATE TABLE ""Lancamentos"" (
+                    ""Id""               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""CdFilial""         INTEGER NOT NULL,
+                    ""PlanoContasId""    INTEGER NOT NULL,
+                    ""Tipo""             TEXT    NOT NULL,
+                    ""Origem""           TEXT    NOT NULL,
+                    ""Valor""            REAL    NOT NULL,
+                    ""DataLancamento""   TEXT    NOT NULL,
+                    ""Historico""        TEXT    NOT NULL,
+                    ""DocumentoOrigemId"" INTEGER,
+                    ""CriadoEm""         TEXT    NOT NULL,
+                    CONSTRAINT ""FK_Lancamentos_PlanoContas_PlanoContasId""
+                        FOREIGN KEY (""PlanoContasId"") REFERENCES ""PlanoContas"" (""Id"") ON DELETE RESTRICT
+                );
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Lancamentos_PlanoContasId",
-                table: "Lancamentos",
-                column: "PlanoContasId");
+                CREATE INDEX ""IX_Lancamentos_PlanoContasId""
+                    ON ""Lancamentos"" (""PlanoContasId"");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_PlanoContas_CdFilial_Codigo",
-                table: "PlanoContas",
-                columns: new[] { "CdFilial", "Codigo" },
-                unique: true);
+                CREATE UNIQUE INDEX ""IX_PlanoContas_CdFilial_Codigo""
+                    ON ""PlanoContas"" (""CdFilial"", ""Codigo"");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_PlanoContas_PaiId",
-                table: "PlanoContas",
-                column: "PaiId");
+                CREATE INDEX ""IX_PlanoContas_PaiId""
+                    ON ""PlanoContas"" (""PaiId"");
+            ");
         }
 
         /// <inheritdoc />
