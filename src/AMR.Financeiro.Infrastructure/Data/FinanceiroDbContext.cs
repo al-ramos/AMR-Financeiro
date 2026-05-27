@@ -18,6 +18,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
         {
             e.ToTable("ContasPagar");
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
             e.Property(x => x.Valor).HasPrecision(18, 2);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
@@ -28,6 +29,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
         {
             e.ToTable("ContasReceber");
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
             e.Property(x => x.Valor).HasPrecision(18, 2);
             e.Property(x => x.ValorRecebido).HasPrecision(18, 2);
@@ -40,6 +42,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
         {
             e.ToTable("PlanoContas");
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Codigo).HasMaxLength(20).IsRequired();
             e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
             e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
@@ -55,6 +58,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
         {
             e.ToTable("Lancamentos");
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Historico).HasMaxLength(500).IsRequired();
             e.Property(x => x.Valor).HasPrecision(18, 2);
             e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
@@ -70,6 +74,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
         {
             e.ToTable("Usuarios");
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Username).HasMaxLength(100).IsRequired();
             e.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
             e.Property(x => x.Role).HasMaxLength(50).IsRequired();

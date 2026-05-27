@@ -34,7 +34,13 @@ namespace AMR.Financeiro.Infrastructure.Migrations
 
             // SQLite: PRIMARY KEY como constraint de tabela NÃO cria alias do rowid —
             // o Id não é gerado automaticamente. Usar SQL direto com coluna-level PRIMARY KEY.
+            // DROP IF EXISTS garante idempotência caso o banco no EFS tenha tabelas em estado
+            // inconsistente de execuções anteriores que falharam parcialmente.
             migrationBuilder.Sql(@"
+                DROP TABLE IF EXISTS ""Lancamentos"";
+                DROP TABLE IF EXISTS ""PlanoContas"";
+                DROP TABLE IF EXISTS ""ContasReceber"";
+
                 CREATE TABLE ""ContasReceber"" (
                     ""Id""               INTEGER PRIMARY KEY AUTOINCREMENT,
                     ""CdFilial""         INTEGER NOT NULL,
