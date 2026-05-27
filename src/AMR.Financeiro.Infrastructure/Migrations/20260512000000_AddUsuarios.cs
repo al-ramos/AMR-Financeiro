@@ -11,27 +11,21 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Usuarios",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Username = table.Column<string>(maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(maxLength: 500, nullable: false),
-                    Role = table.Column<string>(maxLength: 50, nullable: false),
-                    CriadoEm = table.Column<DateTime>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Usuarios", x => x.Id);
-                });
+            // SQLite: usar SQL direto com INTEGER PRIMARY KEY para auto-increment correto.
+            // DROP IF EXISTS para idempotência caso o banco no EFS esteja em estado parcial.
+            migrationBuilder.Sql(@"
+                DROP TABLE IF EXISTS ""Usuarios"";
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Usuarios_Username",
-                table: "Usuarios",
-                column: "Username",
-                unique: true);
+                CREATE TABLE ""Usuarios"" (
+                    ""Id""           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""Username""     TEXT NOT NULL,
+                    ""PasswordHash"" TEXT NOT NULL,
+                    ""Role""         TEXT NOT NULL,
+                    ""CriadoEm""     TEXT NOT NULL
+                );
+
+                CREATE UNIQUE INDEX ""IX_Usuarios_Username"" ON ""Usuarios"" (""Username"");
+            ");
         }
 
         /// <inheritdoc />
