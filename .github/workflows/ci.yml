@@ -26,13 +26,37 @@ jobs:
       - name: Build (no warnings as errors)
         run: dotnet build AMR.Financeiro.slnx --no-restore --configuration Release
 
-      - name: Run unit tests
-        run: dotnet test AMR.Financeiro.slnx --no-build --configuration Release --verbosity normal --settings coverlet.runsettings
+      - name: Run unit tests + coverage
+        run: |
+          dotnet test AMR.Financeiro.slnx \
+            --no-build \
+            --configuration Release \
+            --verbosity normal \
+            --settings coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults
+
+      # Instala reportgenerator para gerar resumo legível
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      # Gera resumo de cobertura no GitHub Actions Job Summary
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          reportgenerator \
+            -reports:"./TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"./TestResults/CoverageReport" \
+            -reporttypes:"MarkdownSummaryGithub;Cobertura" \
+            -verbosity:Warning
+          cat ./TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
-          path: "**/TestResults/**/coverage.cobertura.xml"
-          retention-days: 7
+          path: |
+            **/TestResults/**/coverage.cobertura.xml
+            TestResults/CoverageReport/
+          retention-days: 14

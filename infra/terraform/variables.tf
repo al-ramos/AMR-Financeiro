@@ -53,5 +53,5 @@ variable "ecs_task_cpu" {
 variable "ecs_task_memory" {
   description = "Memória alocada por task Fargate em MB"
   type        = number
-  default     = 512
+  default     = 1024   # mínimo seguro para .NET 8 (segfault com 512 MB)
 }

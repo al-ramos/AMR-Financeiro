@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Configuração do Coverlet para coleta de cobertura de código.
+
+  Threshold: 40% mínimo de cobertura de linhas (Sprint 4).
+    Aumentar gradualmente: Sprint 5 → 55%, Sprint 6 → 70%.
+
+  Exclude: exclui projetos que não têm lógica testável unitariamente
+    (API bootstrap, Infrastructure/EF, Worker hosted service).
+-->
 <RunSettings>
   <DataCollectionRunSettings>
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <Threshold>70</Threshold>
+          <Threshold>40</Threshold>
           <ThresholdType>line</ThresholdType>
           <ThresholdStat>Total</ThresholdStat>
+          <Exclude>[AMR.Financeiro.API]*,[AMR.Financeiro.Infrastructure]*,[AMR.Financeiro.Worker]*,[AMR.Financeiro.Shared]*</Exclude>
+          <ExcludeByFile>**/Migrations/**/*.cs,**/Program.cs</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>

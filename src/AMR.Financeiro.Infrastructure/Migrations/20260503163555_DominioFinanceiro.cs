@@ -11,12 +11,26 @@ namespace AMR.Financeiro.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "Status",
-                table: "ContasPagar",
-                maxLength: 20,
-                nullable: false,
-                oldClrType: typeof(string));
+            // SQLite não suporta ALTER COLUMN diretamente; EF Core gera uma reconstrução
+            // de tabela via ef_temp_, mas falha com "AUTOINCREMENT is only allowed on an
+            // INTEGER PRIMARY KEY" por usar "int" em vez de "INTEGER" no DDL gerado.
+            // Como SQLite não impõe maxLength em TEXT, a mudança é no-op — substituído
+            // por SQL direto com a reconstrução correta.
+            migrationBuilder.Sql(@"
+                CREATE TABLE ""ef_temp_ContasPagar"" (
+                    ""Id""            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                    ""CdFilial""      INTEGER NOT NULL,
+                    ""Descricao""     TEXT    NOT NULL,
+                    ""Valor""         REAL    NOT NULL,
+                    ""Vencimento""    TEXT    NOT NULL,
+                    ""DataPagamento"" TEXT,
+                    ""Status""        TEXT    NOT NULL,
+                    ""CriadoEm""      TEXT    NOT NULL
+                );
+                INSERT INTO ""ef_temp_ContasPagar"" SELECT * FROM ""ContasPagar"";
+                DROP TABLE ""ContasPagar"";
+                ALTER TABLE ""ef_temp_ContasPagar"" RENAME TO ""ContasPagar"";
+            ");
 
             migrationBuilder.CreateTable(
                 name: "ContasReceber",
@@ -120,12 +134,8 @@ namespace AMR.Financeiro.Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "PlanoContas");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "Status",
-                table: "ContasPagar",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldMaxLength: 20);
+            // Reverso do no-op acima — SQLite TEXT não tem maxLength, sem reconstrução necessária.
+            migrationBuilder.Sql("SELECT 1;");
         }
     }
 }
