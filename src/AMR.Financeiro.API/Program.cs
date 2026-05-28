@@ -80,9 +80,6 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
-    // TEMPORÁRIO: limpa o banco EFS para forçar migrations do zero (estado inconsistente)
-    // Remover após primeiro deploy bem-sucedido.
-    await ctx.Database.EnsureDeletedAsync();
     await ctx.Database.MigrateAsync();
     await PlanoContasSeed.AplicarAsync(ctx, cdFilial: 1);
 
