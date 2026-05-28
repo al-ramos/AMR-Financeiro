@@ -101,8 +101,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Swagger habilitado em todos os ambientes (projeto interno)
-app.UseSwagger();
-app.UseSwaggerUI();
+// RoutePrefix = "api/swagger" para funcionar atrás do ALB (que roteia /api/* para este container)
+app.UseSwagger(c => c.RouteTemplate = "api/swagger/{documentName}/swagger.json");
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AMR.Financeiro API v1");
+    c.RoutePrefix = "api/swagger";
+});
 
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
