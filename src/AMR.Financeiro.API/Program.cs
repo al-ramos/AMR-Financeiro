@@ -97,11 +97,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger habilitado em todos os ambientes (projeto interno)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
