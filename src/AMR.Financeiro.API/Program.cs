@@ -83,13 +83,16 @@ using (var scope = app.Services.CreateScope())
     await ctx.Database.MigrateAsync();
     await PlanoContasSeed.AplicarAsync(ctx, cdFilial: 1);
 
-    // Cria usuário admin padrão se não existir
-    var usuarioRepo = scope.ServiceProvider.GetRequiredService<IUsuarioRepository>();
-    var admin = await usuarioRepo.GetByUsernameAsync("admin");
-    if (admin is null)
+    // Cria usuário admin padrão se não existir — SQL direto para evitar EF Core 9 + SQLite sentinel bug
+    var adminExists = await ctx.Usuarios.AnyAsync(u => u.Username == "admin");
+    if (!adminExists)
     {
-        var adminUser = Usuario.Criar("admin", PasswordHelper.Hash("admin123"), "Admin");
-        await usuarioRepo.AddAsync(adminUser);
+        var hash = PasswordHelper.Hash("admin123");
+        var now  = DateTime.UtcNow.ToString("o");
+        await ctx.Database.ExecuteSqlRawAsync($@"
+            INSERT INTO ""Usuarios"" (""Username"", ""PasswordHash"", ""Role"", ""CriadoEm"")
+            VALUES ('admin', '{hash}', 'Admin', '{now}')
+        ");
         app.Logger.LogInformation("Usuário admin criado com senha padrão: admin123");
     }
 }
