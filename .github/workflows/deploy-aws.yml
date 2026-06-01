@@ -52,12 +52,12 @@ jobs:
       - name: Criar bucket S3 para Terraform state (idempotente)
         run: |
           aws s3api create-bucket \
-            --bucket amr-financeiro-tfstate-426222909134 \
+            --bucket amr-financeiro-tfstate-474874558993 \
             --region ${{ env.AWS_REGION }} \
             --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }} \
             2>/dev/null || true
           aws s3api put-bucket-versioning \
-            --bucket amr-financeiro-tfstate-426222909134 \
+            --bucket amr-financeiro-tfstate-474874558993 \
             --versioning-configuration Status=Enabled \
             2>/dev/null || true
 

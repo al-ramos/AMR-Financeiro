@@ -6,8 +6,8 @@
 # na hora de iniciar os containers.
 #
 # URLs geradas (usadas no docker push e no ECS):
-#   426222909134.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/api
-#   426222909134.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/web
+#   474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/api
+#   474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/web
 # =============================================================================
 
 # Repositório para a imagem da API (.NET 8)

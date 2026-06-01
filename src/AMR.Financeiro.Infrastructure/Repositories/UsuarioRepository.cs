@@ -12,7 +12,15 @@ public class UsuarioRepository(FinanceiroDbContext db) : IUsuarioRepository
 
     public async Task AddAsync(Usuario usuario, CancellationToken ct = default)
     {
-        db.Usuarios.Add(usuario);
-        await db.SaveChangesAsync(ct);
+        // SQL direto: EF Core 9 + SQLite não gera corretamente o INSERT omitindo
+        // a PK auto-gerada (NOT NULL constraint failed). Workaround definitivo.
+        var now = usuario.CriadoEm.ToString("o");
+        await db.Database.ExecuteSqlRawAsync($@"
+            INSERT INTO ""Usuarios"" (""Username"", ""PasswordHash"", ""Role"", ""CriadoEm"")
+            VALUES ('{usuario.Username.Replace("'", "''")}',
+                    '{usuario.PasswordHash.Replace("'", "''")}',
+                    '{usuario.Role.Replace("'", "''")}',
+                    '{now}')
+        ", ct);
     }
 }

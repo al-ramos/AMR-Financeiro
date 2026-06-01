@@ -3,6 +3,7 @@ import { PlanoContasPage } from './pages/PlanoContasPage';
 import { LancamentosPage } from './pages/LancamentosPage';
 import { ContasPagarPage } from './pages/ContasPagarPage';
 import { ContasReceberPage } from './pages/ContasReceberPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -137,7 +138,7 @@ function AppLayout() {
             <Route path="/lancamentos"     element={<LancamentosPage />} />
             <Route path="/contas-pagar"    element={<ContasPagarPage />} />
             <Route path="/contas-receber"  element={<ContasReceberPage />} />
-            <Route path="/dashboard"       element={<EmConstrucao titulo="Dashboard" />} />
+            <Route path="/dashboard"       element={<DashboardPage />} />
           </Routes>
         </main>
       </div>

@@ -2,6 +2,7 @@
 # ============================================================
 # start-portfolio.sh — Sobe toda a infraestrutura AMR no AWS
 # Uso: ./start-portfolio.sh
+# Ou:  JWT_KEY="minha-chave" ./start-portfolio.sh
 # ============================================================
 set -e
 
@@ -11,6 +12,17 @@ echo ""
 echo "🚀 AMR SYSTEM — Subindo infraestrutura no AWS..."
 echo "================================================="
 
+# JWT Key — lê da env var ou pede interativamente
+if [ -z "$JWT_KEY" ]; then
+  read -sp "🔑 JWT Key (mínimo 32 caracteres): " JWT_KEY
+  echo ""
+fi
+
+if [ ${#JWT_KEY} -lt 32 ]; then
+  echo "❌ JWT Key muito curta (mínimo 32 caracteres)."
+  exit 1
+fi
+
 cd "$INFRA_DIR"
 
 echo ""
@@ -19,7 +31,7 @@ terraform init -reconfigure
 
 echo ""
 echo "🔨 Aplicando infraestrutura (pode levar ~5 minutos)..."
-terraform apply -auto-approve
+terraform apply -auto-approve -var="jwt_key=$JWT_KEY"
 
 echo ""
 echo "⏳ Aguardando serviços ficarem estáveis..."

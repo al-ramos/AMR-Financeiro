@@ -17,7 +17,7 @@ variable "aws_region" {
 variable "aws_account_id" {
   description = "ID numérico da conta AWS (montado nas URLs do ECR)"
   type        = string
-  default     = "426222909134"
+  default     = "474874558993"
 }
 
 variable "app_prefix" {

@@ -15,7 +15,7 @@ ALB  amr-financeiro  (porta 80)
     │
     └── /*  ────►  ECS Service Web  ──►  Fargate (nginx + React, porta 80)
 
-ECR:  426222909134.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/{api,web}
+ECR:  474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/{api,web}
 ```
 
 ## Pré-requisitos
@@ -31,13 +31,13 @@ O estado do Terraform é guardado num bucket S3. Crie-o **uma única vez** antes
 ```bash
 # 1. Criar o bucket de estado
 aws s3api create-bucket \
-  --bucket amr-financeiro-tfstate-426222909134 \
+  --bucket amr-financeiro-tfstate-474874558993 \
   --region sa-east-1 \
   --create-bucket-configuration LocationConstraint=sa-east-1
 
 # 2. Habilitar versionamento (permite rollback do estado)
 aws s3api put-bucket-versioning \
-  --bucket amr-financeiro-tfstate-426222909134 \
+  --bucket amr-financeiro-tfstate-474874558993 \
   --versioning-configuration Status=Enabled
 ```
 

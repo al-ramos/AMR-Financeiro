@@ -8,11 +8,11 @@
 #
 # Antes do primeiro "terraform init", crie o bucket S3 de estado:
 #   aws s3api create-bucket \
-#     --bucket amr-financeiro-tfstate-426222909134 \
+#     --bucket amr-financeiro-tfstate-474874558993 \
 #     --region sa-east-1 \
 #     --create-bucket-configuration LocationConstraint=sa-east-1
 #   aws s3api put-bucket-versioning \
-#     --bucket amr-financeiro-tfstate-426222909134 \
+#     --bucket amr-financeiro-tfstate-474874558993 \
 #     --versioning-configuration Status=Enabled
 # =============================================================================
 
@@ -29,7 +29,7 @@ terraform {
   # Backend S3 — persiste o estado remotamente para que CI/CD e dev local
   # compartilhem exatamente o mesmo estado da infraestrutura.
   backend "s3" {
-    bucket  = "amr-financeiro-tfstate-426222909134"
+    bucket  = "amr-financeiro-tfstate-474874558993"
     key     = "amr-financeiro/terraform.tfstate"
     region  = "sa-east-1"
     encrypt = true
