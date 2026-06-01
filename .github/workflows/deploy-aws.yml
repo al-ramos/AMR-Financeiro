@@ -1,116 +1,23 @@
 name: Deploy AWS
 
 on:
-  # Dispara automaticamente em cada push na branch main
   push:
     branches: [main]
-
-  # Permite disparar manualmente pelo GitHub Actions UI
-  # Útil para o primeiro deploy da infraestrutura ou rollbacks
   workflow_dispatch:
-    inputs:
-      terraform_only:
-        description: 'Executar apenas Terraform (sem build/deploy das imagens)'
-        required: false
-        default: 'false'
-        type: boolean
 
 env:
-  AWS_REGION: sa-east-1
-  TF_DIR: infra/terraform
+  AWS_REGION:      sa-east-1
+  ECR_API_URL:     474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/api
+  ECR_WEB_URL:     474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/web
+  ECS_CLUSTER:     amr-system
+  ECS_API_SERVICE: amr-financeiro-api
+  ECS_WEB_SERVICE: amr-financeiro-web
+  ALB_URL:         http://amr-system-1908797477.sa-east-1.elb.amazonaws.com
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Job 1 — terraform
-# Provisiona ou atualiza a infraestrutura AWS (ECR, ECS, ALB, EFS...).
-# Exporta os nomes/URLs dos recursos para os jobs seguintes.
-# ─────────────────────────────────────────────────────────────────────────────
 jobs:
-  terraform:
-    name: Terraform
+  deploy:
+    name: Build, Push & Deploy
     runs-on: ubuntu-latest
-
-    outputs:
-      ecr_api_url:      ${{ steps.tf-outputs.outputs.ecr_api_url }}
-      ecr_web_url:      ${{ steps.tf-outputs.outputs.ecr_web_url }}
-      alb_url:          ${{ steps.tf-outputs.outputs.alb_url }}
-      ecs_cluster:      ${{ steps.tf-outputs.outputs.ecs_cluster }}
-      ecs_api_service:  ${{ steps.tf-outputs.outputs.ecs_api_service }}
-      ecs_web_service:  ${{ steps.tf-outputs.outputs.ecs_web_service }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ env.AWS_REGION }}
-
-      # O bucket S3 precisa existir antes do "terraform init".
-      # Este step é idempotente: o "|| true" ignora o erro se o bucket já existir.
-      - name: Criar bucket S3 para Terraform state (idempotente)
-        run: |
-          aws s3api create-bucket \
-            --bucket amr-financeiro-tfstate-474874558993 \
-            --region ${{ env.AWS_REGION }} \
-            --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }} \
-            2>/dev/null || true
-          aws s3api put-bucket-versioning \
-            --bucket amr-financeiro-tfstate-474874558993 \
-            --versioning-configuration Status=Enabled \
-            2>/dev/null || true
-
-      # terraform_wrapper: false → saída limpa no "terraform output -raw"
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '~1.5'
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform init
-
-      - name: Terraform Plan
-        working-directory: ${{ env.TF_DIR }}
-        env:
-          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
-        run: terraform plan -out=tfplan
-
-      - name: Terraform Apply
-        working-directory: ${{ env.TF_DIR }}
-        env:
-          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
-        run: terraform apply -auto-approve tfplan
-
-      # Captura os outputs para reutilizar nos jobs seguintes
-      - name: Capturar outputs do Terraform
-        id: tf-outputs
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          echo "ecr_api_url=$(terraform output -raw ecr_api_url)"         >> $GITHUB_OUTPUT
-          echo "ecr_web_url=$(terraform output -raw ecr_web_url)"         >> $GITHUB_OUTPUT
-          echo "alb_url=$(terraform output -raw alb_url)"                 >> $GITHUB_OUTPUT
-          echo "ecs_cluster=$(terraform output -raw ecs_cluster_name)"    >> $GITHUB_OUTPUT
-          echo "ecs_api_service=$(terraform output -raw ecs_api_service_name)" >> $GITHUB_OUTPUT
-          echo "ecs_web_service=$(terraform output -raw ecs_web_service_name)" >> $GITHUB_OUTPUT
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Job 2 — build-push
-# Constrói as imagens Docker e faz push para o ECR.
-# Usa os 8 primeiros caracteres do SHA do commit como tag (ex: "a1b2c3d4").
-# ─────────────────────────────────────────────────────────────────────────────
-  build-push:
-    name: Build & Push
-    runs-on: ubuntu-latest
-    needs: terraform
-    # Não executa se o usuário escolheu "terraform_only" no workflow_dispatch
-    if: ${{ github.event.inputs.terraform_only != 'true' }}
-
-    outputs:
-      image_tag: ${{ steps.tag.outputs.tag }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -124,120 +31,36 @@ jobs:
       - name: Login no ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Tag = primeiros 8 caracteres do SHA do commit (rastreável e imutável)
-      - name: Definir tag da imagem
-        id: tag
-        run: echo "tag=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-
-      # Build da API (.NET 8) — Dockerfile na raiz do repositório
-      - name: Build e Push — API
-        env:
-          TAG: ${{ steps.tag.outputs.tag }}
-          ECR_URL: ${{ needs.terraform.outputs.ecr_api_url }}
+      - name: Build & Push API
         run: |
-          docker build -t $ECR_URL:$TAG -t $ECR_URL:latest .
-          docker push $ECR_URL:$TAG
-          docker push $ECR_URL:latest
+          TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          docker build -t $ECR_API_URL:$TAG -t $ECR_API_URL:latest .
+          docker push $ECR_API_URL:$TAG
+          docker push $ECR_API_URL:latest
 
-      # Build do frontend (nginx + React) — Dockerfile em frontend/
-      - name: Build e Push — Web
-        env:
-          TAG: ${{ steps.tag.outputs.tag }}
-          ECR_URL: ${{ needs.terraform.outputs.ecr_web_url }}
+      - name: Build & Push Web
         run: |
-          docker build -t $ECR_URL:$TAG -t $ECR_URL:latest ./frontend
-          docker push $ECR_URL:$TAG
-          docker push $ECR_URL:latest
+          TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          docker build -t $ECR_WEB_URL:$TAG -t $ECR_WEB_URL:latest ./frontend
+          docker push $ECR_WEB_URL:$TAG
+          docker push $ECR_WEB_URL:latest
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Job 3 — deploy
-# Atualiza as task definitions do ECS com a nova tag de imagem,
-# força novo deployment e aguarda a estabilização dos serviços.
-# ─────────────────────────────────────────────────────────────────────────────
-  deploy:
-    name: Deploy ECS
-    runs-on: ubuntu-latest
-    needs: [terraform, build-push]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ env.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '~1.5'
-          terraform_wrapper: false
-
-      - name: Terraform Init
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform init
-
-      # Atualiza somente as task definitions com a nova tag de imagem.
-      # O Terraform compara o estado atual com o desejado e aplica só o diff.
-      - name: Atualizar task definitions com SHA da imagem
-        working-directory: ${{ env.TF_DIR }}
-        env:
-          TAG: ${{ needs.build-push.outputs.image_tag }}
-          TF_VAR_jwt_key: ${{ secrets.JWT_KEY }}
+      - name: Force new deployment
         run: |
-          terraform apply -auto-approve \
-            -var="api_image_tag=$TAG" \
-            -var="web_image_tag=$TAG"
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_API_SERVICE --force-new-deployment --output text
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_WEB_SERVICE --force-new-deployment --output text
 
-      # force-new-deployment → ECS para as tasks antigas e inicia novas com a
-      # task definition atualizada (nova imagem).
-      - name: Force new deployment — API
+      - name: Aguardar estabilização
         run: |
-          aws ecs update-service \
-            --cluster ${{ needs.terraform.outputs.ecs_cluster }} \
-            --service ${{ needs.terraform.outputs.ecs_api_service }} \
-            --force-new-deployment \
-            --output text
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_API_SERVICE
+          aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_WEB_SERVICE
 
-      - name: Force new deployment — Web
+      - name: Health check
         run: |
-          aws ecs update-service \
-            --cluster ${{ needs.terraform.outputs.ecs_cluster }} \
-            --service ${{ needs.terraform.outputs.ecs_web_service }} \
-            --force-new-deployment \
-            --output text
-
-      # Aguarda até que todas as desired tasks estejam rodando e saudáveis.
-      # O comando falha com timeout (~10 min) se o serviço não estabilizar.
-      - name: Aguardar estabilização dos serviços ECS
-        run: |
-          echo "⏳ Aguardando API estabilizar..."
-          aws ecs wait services-stable \
-            --cluster ${{ needs.terraform.outputs.ecs_cluster }} \
-            --services ${{ needs.terraform.outputs.ecs_api_service }}
-
-          echo "⏳ Aguardando Web estabilizar..."
-          aws ecs wait services-stable \
-            --cluster ${{ needs.terraform.outputs.ecs_cluster }} \
-            --services ${{ needs.terraform.outputs.ecs_web_service }}
-
-      # Testa se a aplicação responde com HTTP 200 após o deploy.
-      # Tenta por até 3 minutos (18 × 10s) antes de falhar.
-      - name: Health check da aplicação
-        env:
-          ALB_URL: ${{ needs.terraform.outputs.alb_url }}
-        run: |
-          echo "Testando $ALB_URL ..."
           for i in $(seq 1 18); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$ALB_URL" || echo "000")
-            echo "  Tentativa $i/18: HTTP $STATUS"
-            if [[ "$STATUS" == "200" ]]; then
-              echo "✅ Aplicação respondendo com sucesso!"
-              exit 0
-            fi
+            echo "Tentativa $i/18: HTTP $STATUS"
+            if [[ "$STATUS" == "200" ]]; then echo "✅ OK!"; exit 0; fi
             sleep 10
           done
-          echo "❌ Health check falhou após 3 minutos"
-          exit 1
+          echo "❌ Health check falhou"; exit 1
