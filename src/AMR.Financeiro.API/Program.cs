@@ -9,8 +9,30 @@ using AMR.Financeiro.Domain.Interfaces;
 using AMR.Financeiro.Infrastructure;
 using AMR.Financeiro.Infrastructure.Data;
 using AMR.Financeiro.Shared.Security;
+using Serilog;
+
+// ── Serilog — configuração antecipada para capturar erros de startup ──────────
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: true)
+        .AddEnvironmentVariables()
+        .Build())
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "AMR.Financeiro.API")
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Serilog como provider de log ──────────────────────────────────────────────
+builder.Host.UseSerilog((ctx, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "AMR.Financeiro.API")
+    .WriteTo.Console(
+        outputTemplate: ctx.HostingEnvironment.IsProduction()
+            ? "[{Timestamp:o} {Level:u3}] {SourceContext}: {Message:lj} {Properties:j}{NewLine}{Exception}"
+            : "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}"));
 
 // ── Infraestrutura + Application ──────────────────────────────────────────────
 builder.Services.AddApplication();
@@ -137,6 +159,12 @@ if (!app.Environment.IsDevelopment())
 // Redirect raiz para Swagger em dev (facilita preview e testes locais)
 if (app.Environment.IsDevelopment())
     app.MapGet("/", () => Results.Redirect("/api/swagger")).ExcludeFromDescription();
+
+// ── Serilog request logging ───────────────────────────────────────────────────
+app.UseSerilogRequestLogging(opts =>
+{
+    opts.MessageTemplate = "HTTP {RequestMethod} {RequestPath} → {StatusCode} ({Elapsed:0.000}ms)";
+});
 
 // ── Security Headers (OWASP) ──────────────────────────────────────────────────
 app.Use(async (ctx, next) =>
