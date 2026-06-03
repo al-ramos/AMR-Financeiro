@@ -1,6 +1,17 @@
 # AMR-Financeiro — Contexto para Claude Code
 
+## Identidade do módulo
 Módulo financeiro do **AMR SYSTEM** — gestão de Contas a Pagar, Contas a Receber, Lançamentos e Plano de Contas.
+- **API local**: http://localhost:5015/swagger
+- **Web local**: http://localhost:5173
+- **ALB (AWS)**: listener `:80` · serviços ECS `amr-financeiro-api` + `amr-financeiro-web`
+- **Banco**: SQL Server (dev) / SQLite via EF Core 8 (EFS `/data` em produção)
+
+## Ecossistema
+AMR-Financeiro é o módulo financeiro do **AMR SYSTEM** — ERP corporativo composto por 3 sistemas ativos:
+- **AMR-Financeiro** (este repo) — SQL Server/SQLite, porta API :5015, web :5173
+- **AMR-Core** — SQLite, porta API :5001, web :5175
+- **AMR-Forms-Fábrica** — SQLite, porta API :5186, web :5174
 
 ## Stack
 
@@ -15,19 +26,9 @@ Módulo financeiro do **AMR SYSTEM** — gestão de Contas a Pagar, Contas a Rec
 | Infra | AWS ECS Fargate + ALB + EFS + ECR (Terraform) |
 | CI/CD | GitHub Actions (ci.yml + deploy-aws.yml) |
 
-## Portas e URLs
-
-| Serviço | Dev | Prod |
-|---------|-----|------|
-| API | http://localhost:5015 | http://amr-system-1908797477.sa-east-1.elb.amazonaws.com |
-| Swagger | http://localhost:5015/swagger | mesma URL base /api/swagger |
-| Frontend | http://localhost:5173 | ALB porta 80 |
-| RabbitMQ AMQP | localhost:5672 | — |
-| RabbitMQ UI | http://localhost:15672 | — |
-
 Credenciais dev: `admin` / `admin123` (seed automático no startup).
 
-## Estrutura de Projetos
+## Arquitetura
 
 ```
 src/
@@ -42,14 +43,14 @@ tests/AMR.Financeiro.Tests/         # xUnit — 15 testes (handlers)
 infra/terraform/                    # IaC AWS (ECS, ALB, EFS, ECR, IAM, Secrets)
 ```
 
-## Domínio
+Padrões: Clean Architecture, CQRS+MediatR, Repository Pattern, Unit of Work, DI.
 
-### Entidades principais
+## Entidades do Domínio
 
-- **PlanoContas** — Plano de contas hierárquico (código 1/1.1/1.1.1, Sintética/Analítica, paiId)
-- **LancamentoFinanceiro** — Lançamento contábil (Débito/Crédito, ligado ao PlanoContas)
-- **ContaPagar** — Conta a pagar (Aberta → Paga/Cancelada/Vencida), baixa gera Lançamento de Débito
-- **ContaReceber** — Conta a receber (Aberta → Recebida/Cancelada/Vencida), baixa gera Lançamento de Crédito
+- **PlanoContas** — hierárquico (código 1/1.1/1.1.1, Sintética/Analítica, paiId)
+- **LancamentoFinanceiro** — lançamento contábil (Débito/Crédito, ligado ao PlanoContas)
+- **ContaPagar** — Aberta → Paga/Cancelada/Vencida; baixa gera Lançamento de Débito
+- **ContaReceber** — Aberta → Recebida/Cancelada/Vencida; baixa gera Lançamento de Crédito
 - **Usuario** — Autenticação JWT (Role: Admin/User)
 
 ### Enums
@@ -87,59 +88,40 @@ OrigemLancamento:  ContaPagar | ContaReceber | Manual
 - Queries: `GetContasReceberQuery`, `GetContaReceberByIdQuery`
 - Commands: `CriarContaReceberCommand`, `ReceberContaCommand` (cria Lançamento Crédito), `CancelarContaReceberCommand`
 
-## Testes
-
-```bash
-# Rodar todos os testes
-dotnet test tests/AMR.Financeiro.Tests/
-
-# Com cobertura
-dotnet test --settings coverlet.runsettings
-```
-
-Testes existentes (15):
-- `PagarContaHandlerTests` — valida fluxo de baixa de ContaPagar
-- `CriarLancamentoHandlerTests` — valida criação de lançamento
-- `CriarPlanoContasHandlerTests` — valida criação no plano de contas
-
-Padrão: mocks com `Moq`, asserts com `FluentAssertions`.
-
-## Dev local
+## Comandos Principais
 
 ```bash
 # Backend
-cd src/AMR.Financeiro.API
-dotnet run
+cd src/AMR.Financeiro.API && dotnet run
 # → http://localhost:5015/swagger
 
 # Frontend
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install && npm run dev
 # → http://localhost:5173
 
 # RabbitMQ (necessário para Worker)
 docker-compose up -d
-```
 
-## Database
+# Testes
+dotnet test tests/AMR.Financeiro.Tests/
+dotnet test --settings coverlet.runsettings   # com cobertura
 
-EF Core com migrations automáticas no startup. Para criar nova migration:
-
-```bash
-cd src/AMR.Financeiro.API
-dotnet ef migrations add NomeDaMigration --project ../AMR.Financeiro.Infrastructure
+# Migrations
+dotnet ef migrations add <Nome> --project ../AMR.Financeiro.Infrastructure
 dotnet ef database update
 ```
 
-Seed executado no startup: PlanoContas padrão + lançamentos demo + usuário admin.
+## Deploy AWS
 
-## CI/CD
+Push para `main` dispara `deploy-aws.yml`:
+1. Build Docker → push ECR (`amr-financeiro-api`, `amr-financeiro-web`)
+2. Update ECS task definition + force deploy no cluster `amr-system`
+3. Health check no ALB
 
-- **ci.yml** — build + testes + cobertura (push para main/develop/feat/fix + PRs)
-- **deploy-aws.yml** — build Docker → push ECR → force ECS deploy → health check (push para main)
-
-AWS Region: `sa-east-1` | Cluster: `amr-system` | Conta: `474874558993`
+- **Produção:** `amr-system-1908797477.sa-east-1.elb.amazonaws.com`
+- **Cluster:** `amr-system` | **Region:** `sa-east-1` | **Account:** `474874558993`
+- **ECR:** `amr-financeiro-api`, `amr-financeiro-web`
+- **EFS:** montado em `/data` para persistência do SQLite
 
 ## Convenções
 
@@ -155,3 +137,77 @@ AWS Region: `sa-east-1` | Cluster: `amr-system` | Conta: `474874558993`
 - **AMR-Fábrica → AMR-Financeiro**: saída de ficha gera `ContaPagar`; NF transmitida gera `ContaReceber` (integração fail-safe via RabbitMQ)
 - **AMR-Core**: repositório separado com Produtos, Pedidos de Compra/Venda
 - ALB compartilhado (cluster `amr-system`) roteia tráfego entre os 3 sistemas
+
+## Páginas frontend
+
+| Rota | Página | Funcionalidades |
+|------|--------|-----------------|
+| `/login` | `LoginPage` | Autenticação JWT, redirect automático |
+| `/dashboard` | `DashboardPage` | Cards KPIs + gráfico lançamentos por período |
+| `/contas-pagar` | `ContasPagarPage` | CRUD, baixa manual, status, vencimento |
+| `/contas-receber` | `ContasReceberPage` | CRUD, baixa com lançamento, alertas vencimento |
+| `/lancamentos` | `LancamentosPage` | Listagem lançamentos com categorização |
+| `/plano-contas` | `PlanoContasPage` | Árvore hierárquica do plano de contas |
+
+## Estado do Projeto — Sprint 6 ativo (02/06–24/06/2026)
+
+- 15 testes unitários passando (ContasPagar, Lancamentos, PlanoContas handlers)
+- Infra Terraform unificada provisionada na AWS (cluster `amr-system`)
+- CI/CD GitHub Actions funcionando
+- **Sprint 6 entregues no AMR-Financeiro:**
+  - CLAUDE.md criado na raiz do repo (03/06/2026 · commit `9136720`)
+
+## Protocolo de Encerramento de Card
+
+Ao concluir qualquer card/tarefa, executar nesta ordem:
+
+1. **Git** — commit descritivo + `git push -u origin <branch>`
+2. **Notion card** — atualizar `Entrega` para a data real e adicionar referência do commit no conteúdo da página
+3. **Kanban** — atualizar a propriedade `Status` do card no Notion para `✅ Concluído` (via `update_properties`)
+4. **CLAUDE.md** — atualizar seção `Estado do Projeto` se houve mudança relevante de contexto
+5. **Próximo Card** — identificar o próximo card no Backlog, atualizar `Status` para `▶️ Em andamento` no Notion e atualizar a seção `## Próximo Card` abaixo
+6. **Merge para main** — fazer merge do branch de feature para `main` e push, garantindo que o CLAUDE.md atualizado esteja disponível para a próxima sessão
+
+---
+
+## Protocolo de Encerramento de Sessão
+
+Disparado quando o usuário disser **"encerrar sessão"** (ou "fechar sessão", "fim do dia", "encerrando").
+
+Executar em ordem:
+
+1. Consolidar todos os cards concluídos na sessão (título, commit, link Notion)
+2. **Kanban** — atualizar `Status` de todos os cards trabalhados na sessão (concluídos → `✅ Concluído`, próximo → `▶️ Em andamento`)
+3. Confirmar o Próximo Card atualizado no `CLAUDE.md`
+4. Criar **1 evento no Google Calendar** com:
+   - Título: `AMR-Financeiro ✅ Sessão DD/MM/YYYY`
+   - Data/hora: agora (duração 30 min)
+   - Descrição: cards entregues + commits + próximo card
+   - Reminder: e-mail 0 minutos antes (notificação imediata)
+
+> Apenas 1 chamada de Calendar por sessão — independente de quantos cards foram feitos.
+
+---
+
+## Próximo Card
+
+**Nenhum card formal atribuído ao AMR-Financeiro no Sprint 6** além do CLAUDE.md (concluído).
+
+> **Card pendente em outro repo (requer sessão separada):**
+> 🔧 CLAUDE.md em AMR-Forms-Fábrica
+> - Notion: https://www.notion.so/374d35f21de58191939acf6c08a6e3e5
+> - Requer sessão Claude Code web com o repo `al-ramos/AMR-Forms-Fabrica`
+
+---
+
+## Troubleshooting Frequente
+
+| Problema | Solução |
+|----------|---------|
+| Porta errada no backend | Verificar `launchSettings.json` → `applicationUrl: http://localhost:5015` |
+| CORS bloqueando frontend | `appsettings.Development.json` → `AllowedOrigins: ["http://localhost:5173"]` |
+| JWT inválido/expirado | Token expira em 8h; seed cria `admin`/`admin123` automaticamente no startup |
+| Worker sem conexão RabbitMQ | Executar `docker-compose up -d` antes de iniciar o Worker |
+| MediatR não resolve handlers | Verificar registro em `Application/DependencyInjection.cs` |
+| EF migration falha | Usar `--project ../AMR.Financeiro.Infrastructure` a partir de `src/AMR.Financeiro.API` |
+| AWS CLI no Git Bash | Prefixar com `MSYS_NO_PATHCONV=1 aws ecs ...` |
