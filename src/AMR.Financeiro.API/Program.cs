@@ -39,6 +39,27 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// ── Rate Limiting — 100 req/min por IP ────────────────────────────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+            }));
+    options.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.Headers.RetryAfter = "60";
+        await ctx.HttpContext.Response.WriteAsync("Too many requests. Retry after 60 seconds.", ct);
+    };
+});
+
 // ── Controllers + Swagger com Bearer ──────────────────────────────────────────
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -113,7 +134,12 @@ app.UseSwaggerUI(c =>
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+// Redirect raiz para Swagger em dev (facilita preview e testes locais)
+if (app.Environment.IsDevelopment())
+    app.MapGet("/", () => Results.Redirect("/api/swagger")).ExcludeFromDescription();
+
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
