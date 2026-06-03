@@ -22,7 +22,7 @@ AMR-Financeiro é o módulo financeiro do **AMR SYSTEM** — ERP corporativo com
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
 | Auth | JWT Bearer (HS256, 8h, PBKDF2/SHA256 password hash) |
 | Mensageria | RabbitMQ + MassTransit (Worker Background Service) |
-| Testes | xUnit + Coverlet (15 testes) |
+| Testes | xUnit + Coverlet (54 testes) |
 | Infra | AWS ECS Fargate + ALB + EFS + ECR (Terraform) |
 | CI/CD | GitHub Actions (ci.yml + deploy-aws.yml) |
 
@@ -151,7 +151,7 @@ Push para `main` dispara `deploy-aws.yml`:
 
 ## Estado do Projeto — Sprint 6 ativo (02/06–24/06/2026)
 
-- 15 testes unitários passando (ContasPagar, Lancamentos, PlanoContas handlers)
+- 54 testes unitários passando — todos os handlers cobertos (ContasPagar, ContasReceber, Lancamentos, PlanoContas)
 - Infra Terraform unificada provisionada na AWS (cluster `amr-system`)
 - CI/CD GitHub Actions funcionando
 - **Sprint 6 entregues no AMR-Financeiro:**
