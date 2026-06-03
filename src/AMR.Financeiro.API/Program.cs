@@ -138,6 +138,19 @@ if (!app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
     app.MapGet("/", () => Results.Redirect("/api/swagger")).ExcludeFromDescription();
 
+// ── Security Headers (OWASP) ──────────────────────────────────────────────────
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["X-Content-Type-Options"]  = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"]         = "DENY";
+    ctx.Response.Headers["X-XSS-Protection"]        = "1; mode=block";
+    ctx.Response.Headers["Referrer-Policy"]         = "strict-origin-when-cross-origin";
+    ctx.Response.Headers["Permissions-Policy"]      = "geolocation=(), microphone=(), camera=()";
+    if (!ctx.Request.IsHttps && app.Environment.IsProduction())
+        ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+    await next();
+});
+
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
