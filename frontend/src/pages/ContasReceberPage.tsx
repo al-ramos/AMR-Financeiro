@@ -3,6 +3,7 @@ import { useContasReceber, useCriarContaReceber, useReceberConta, useCancelarCon
 import type { ContaReceberDto } from '../api/contasReceberApi';
 import { ContaReceberForm } from '../components/contasReceber/ContaReceberForm';
 import { Modal } from '../components/ui/Modal';
+import { useCsvExport } from '../hooks/useCsvExport';
 import { AlertaErro } from '../components/ui/AlertaErro';
 
 const CD_FILIAL = 1;
@@ -37,6 +38,7 @@ export function ContasReceberPage() {
   const [erroForm, setErroForm]           = useState<string | null>(null);
   const [recebendoId, setRecebendoId]     = useState<number | null>(null);
   const [dataRecebimento, setDataRecebimento] = useState(new Date().toISOString().slice(0, 10));
+  const { exportar, exportando } = useCsvExport();
 
   const { data: contas = [], isLoading, isError, error } = useContasReceber(CD_FILIAL);
   const criar   = useCriarContaReceber();
@@ -95,12 +97,21 @@ export function ContasReceberPage() {
           <span style={{ fontSize: 13, fontWeight: 600, color: '#495057' }}>
             <i className="bi bi-list-ul me-2"></i>Contas · Filial {CD_FILIAL}
           </span>
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={() => { setErroForm(null); setModalAberto(true); }}
-          >
-            <i className="bi bi-plus-lg me-1"></i>Nova Conta
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => exportar(`/contasreceber/export?cdFilial=${CD_FILIAL}`, 'contas_receber')}
+              disabled={exportando}
+            >
+              <i className="bi bi-download me-1"></i>{exportando ? 'Exportando...' : 'CSV'}
+            </button>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => { setErroForm(null); setModalAberto(true); }}
+            >
+              <i className="bi bi-plus-lg me-1"></i>Nova Conta
+            </button>
+          </div>
         </div>
 
         {isLoading && (

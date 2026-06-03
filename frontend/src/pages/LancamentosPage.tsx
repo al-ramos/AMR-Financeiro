@@ -5,6 +5,7 @@ import type { LancamentoFinanceiroDto } from '../api/lancamentosApi';
 import { LancamentoForm } from '../components/lancamentos/LancamentoForm';
 import { Modal } from '../components/ui/Modal';
 import { AlertaErro } from '../components/ui/AlertaErro';
+import { useCsvExport } from '../hooks/useCsvExport';
 
 const CD_FILIAL = 1;
 
@@ -52,6 +53,7 @@ export function LancamentosPage() {
   const [fim, setFim]       = useState(mesAtual.fim);
   const [modalAberto, setModalAberto] = useState(false);
   const [erroForm, setErroForm]       = useState<string | null>(null);
+  const { exportar, exportando } = useCsvExport();
 
   const { data: lancamentos = [], isLoading, isError, error } = useLancamentosPorPeriodo(CD_FILIAL, inicio, fim);
   const { data: contas = [] } = usePlanoContasLista();
@@ -119,9 +121,18 @@ export function LancamentosPage() {
           <span style={{ fontSize: 13, fontWeight: 600, color: '#495057' }}>
             <i className="bi bi-journal-text me-2"></i>Movimentos · Filial {CD_FILIAL}
           </span>
-          <button className="btn btn-sm btn-primary" onClick={() => { setErroForm(null); setModalAberto(true); }}>
-            <i className="bi bi-plus-lg me-1"></i>Novo Lançamento
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => exportar(`/lancamentos/export?cdFilial=${CD_FILIAL}&inicio=${inicio}&fim=${fim}`, 'lancamentos')}
+              disabled={exportando}
+            >
+              <i className="bi bi-download me-1"></i>{exportando ? 'Exportando...' : 'CSV'}
+            </button>
+            <button className="btn btn-sm btn-primary" onClick={() => { setErroForm(null); setModalAberto(true); }}>
+              <i className="bi bi-plus-lg me-1"></i>Novo Lançamento
+            </button>
+          </div>
         </div>
 
         {isLoading && (

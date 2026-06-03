@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AMR.Financeiro.Application.Features.ContasReceber.Commands;
 using AMR.Financeiro.Application.Features.ContasReceber.Queries;
+using AMR.Financeiro.API.Helpers;
 
 namespace AMR.Financeiro.API.Controllers;
 
@@ -49,6 +50,14 @@ public class ContasReceberController(IMediator mediator) : ControllerBase
     {
         var ok = await mediator.Send(new CancelarContaReceberCommand(id), ct);
         return ok ? NoContent() : NotFound();
+    }
+
+    // GET api/contasreceber/export?cdFilial=1
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] int cdFilial, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetContasReceberQuery(cdFilial), ct);
+        return CsvExportHelper.Export(result, "contas_receber");
     }
 }
 

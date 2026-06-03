@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AMR.Financeiro.Application.Features.Lancamentos.Commands;
 using AMR.Financeiro.Application.Features.Lancamentos.Queries;
+using AMR.Financeiro.API.Helpers;
 
 namespace AMR.Financeiro.API.Controllers;
 
@@ -45,6 +46,23 @@ public class LancamentosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetLancamentosByPlanoContasQuery(planoContasId), ct);
         return Ok(result);
+    }
+
+    // GET api/lancamentos/export?cdFilial=1&inicio=2026-01-01&fim=2026-12-31
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(
+        [FromQuery] int cdFilial,
+        [FromQuery] DateOnly? inicio,
+        [FromQuery] DateOnly? fim,
+        CancellationToken ct)
+    {
+        IEnumerable<Application.Features.Lancamentos.Dtos.LancamentoFinanceiroDto> result;
+        if (inicio.HasValue && fim.HasValue)
+            result = await mediator.Send(new GetLancamentosByPeriodoQuery(cdFilial, inicio.Value, fim.Value), ct);
+        else
+            result = await mediator.Send(new GetLancamentosQuery(cdFilial), ct);
+
+        return CsvExportHelper.Export(result, "lancamentos");
     }
 
     // POST api/lancamentos

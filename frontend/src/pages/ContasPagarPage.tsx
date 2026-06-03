@@ -4,6 +4,7 @@ import type { ContaPagarDto } from '../api/contasPagarApi';
 import { ContaPagarForm } from '../components/contasPagar/ContaPagarForm';
 import { Modal } from '../components/ui/Modal';
 import { AlertaErro } from '../components/ui/AlertaErro';
+import { useCsvExport } from '../hooks/useCsvExport';
 
 const CD_FILIAL = 1;
 
@@ -37,6 +38,7 @@ export function ContasPagarPage() {
   const [erroForm, setErroForm]         = useState<string | null>(null);
   const [pagandoId, setPagandoId]       = useState<number | null>(null);
   const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().slice(0, 10));
+  const { exportar, exportando } = useCsvExport();
 
   const { data: contas = [], isLoading, isError, error } = useContasPagar(CD_FILIAL);
   const criar   = useCriarContaPagar();
@@ -97,12 +99,21 @@ export function ContasPagarPage() {
           <span style={{ fontSize: 13, fontWeight: 600, color: '#495057' }}>
             <i className="bi bi-list-ul me-2"></i>Contas · Filial {CD_FILIAL}
           </span>
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={() => { setErroForm(null); setModalAberto(true); }}
-          >
-            <i className="bi bi-plus-lg me-1"></i>Nova Conta
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => exportar(`/contaspagar/export?cdFilial=${CD_FILIAL}`, 'contas_pagar')}
+              disabled={exportando}
+            >
+              <i className="bi bi-download me-1"></i>{exportando ? 'Exportando...' : 'CSV'}
+            </button>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => { setErroForm(null); setModalAberto(true); }}
+            >
+              <i className="bi bi-plus-lg me-1"></i>Nova Conta
+            </button>
+          </div>
         </div>
 
         {isLoading && (
