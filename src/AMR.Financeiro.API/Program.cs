@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using AMR.Financeiro.Application;
+using AMR.Financeiro.API.Middleware;
 using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Interfaces;
 using AMR.Financeiro.Infrastructure;
@@ -60,6 +61,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddProblemDetails();
 
 // ── Rate Limiting — 100 req/min por IP ────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
@@ -143,6 +145,8 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogInformation("Usuário admin criado com senha padrão: admin123");
     }
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Swagger habilitado em todos os ambientes (projeto interno)
 // RoutePrefix = "api/swagger" para funcionar atrás do ALB (que roteia /api/* para este container)
