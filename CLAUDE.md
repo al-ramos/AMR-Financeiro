@@ -156,6 +156,7 @@ Push para `main` dispara `deploy-aws.yml`:
 - CI/CD GitHub Actions funcionando
 - **Sprint 6 entregues no AMR-Financeiro:**
   - CLAUDE.md criado na raiz do repo (03/06/2026 · commit `9136720`)
+  - ErrorHandling ProblemDetails RFC 7807: ExceptionHandlingMiddleware + ResultExtensions + Result\<T\> (04/06/2026 · commit `8c461a1`)
 
 ## Protocolo de Encerramento de Card
 
