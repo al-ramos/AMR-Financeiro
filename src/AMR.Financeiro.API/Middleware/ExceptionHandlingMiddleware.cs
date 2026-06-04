@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMR.Financeiro.API.Middleware;
@@ -13,6 +14,11 @@ public class ExceptionHandlingMiddleware(
         try
         {
             await next(context);
+        }
+        catch (ValidationException ex)
+        {
+            var detail = string.Join("; ", ex.Errors.Select(e => e.ErrorMessage));
+            await WriteProblemAsync(context, StatusCodes.Status400BadRequest, "Dados inválidos", detail);
         }
         catch (ArgumentException ex)
         {
