@@ -157,6 +157,7 @@ Push para `main` dispara `deploy-aws.yml`:
 - **Sprint 6 entregues no AMR-Financeiro:**
   - CLAUDE.md criado na raiz do repo (03/06/2026 · commit `9136720`)
   - ErrorHandling ProblemDetails RFC 7807: ExceptionHandlingMiddleware + ResultExtensions + Result\<T\> (04/06/2026 · commit `8c461a1`)
+  - FluentValidation reusável: ValidationBehavior + 5 validators + ValidationException → 400 no middleware (04/06/2026 · commit `158cb84`)
 
 ## Protocolo de Encerramento de Card
 
@@ -192,7 +193,7 @@ Executar em ordem:
 
 ## Próximo Card
 
-**Nenhum card formal atribuído ao AMR-Financeiro no Sprint 6** além do CLAUDE.md (concluído).
+**Cards AMR-Financeiro Sprint 6 concluídos** (CLAUDE.md, ErrorHandling, Repository Pattern, FluentValidation).
 
 > **Card pendente em outro repo (requer sessão separada):**
 > 🔧 CLAUDE.md em AMR-Forms-Fábrica
