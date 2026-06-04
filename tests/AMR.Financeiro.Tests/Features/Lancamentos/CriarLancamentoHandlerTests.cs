@@ -1,6 +1,8 @@
+using FluentValidation;
 using Moq;
 using AMR.Financeiro.Application.Features.Lancamentos.Commands;
 using AMR.Financeiro.Application.Features.Lancamentos.Handlers;
+using AMR.Financeiro.Application.Features.Lancamentos.Validators;
 using AMR.Financeiro.Application.Interfaces;
 using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Enums;
@@ -18,24 +20,18 @@ public class CriarLancamentoHandlerTests
     private CriarLancamentoHandler CreateHandler() =>
         new(_repoMock.Object, _planoMock.Object, _uowMock.Object, _publisherMock.Object);
 
-    [Fact]
-    public async Task Handle_ValorZero_LancaInvalidOperationException()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-100)]
+    public void Validator_ValorInvalido_RetornaErro(decimal valor)
     {
-        var cmd = new CriarLancamentoCommand(1, 10, TipoLancamento.Credito, 0m,
+        var cmd = new CriarLancamentoCommand(1, 10, TipoLancamento.Credito, valor,
             new DateOnly(2026, 5, 1), "Historico");
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            CreateHandler().Handle(cmd, default));
-    }
+        var result = new CriarLancamentoValidator().Validate(cmd);
 
-    [Fact]
-    public async Task Handle_ValorNegativo_LancaInvalidOperationException()
-    {
-        var cmd = new CriarLancamentoCommand(1, 10, TipoLancamento.Credito, -100m,
-            new DateOnly(2026, 5, 1), "Historico");
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            CreateHandler().Handle(cmd, default));
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(cmd.Valor));
     }
 
     [Fact]
