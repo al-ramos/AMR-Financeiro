@@ -9,6 +9,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<ContaPagar> ContasPagar => Set<ContaPagar>();
     public DbSet<ContaReceber> ContasReceber => Set<ContaReceber>();
     public DbSet<PlanoContas> PlanoContas => Set<PlanoContas>();
+    public DbSet<PlanoDeContas> PlanoDeContas => Set<PlanoDeContas>();
     public DbSet<LancamentoFinanceiro> Lancamentos => Set<LancamentoFinanceiro>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<NotaFiscal> NotasFiscais => Set<NotaFiscal>();
@@ -58,6 +59,25 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
              .WithMany(x => x.Filhos)
              .HasForeignKey(x => x.PaiId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PlanoDeContas — plano gerencial hierárquico (5 níveis) com classificação DRE (Card 23.4)
+        mb.Entity<PlanoDeContas>(e =>
+        {
+            e.ToTable("planodecontas");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Codigo).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Natureza).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.GrupoDRE).HasConversion<string>().HasMaxLength(30);
+            e.HasOne<PlanoDeContas>()
+             .WithMany()
+             .HasForeignKey(x => x.PaiId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.CdFilial, x.Codigo }).IsUnique();
         });
 
         // LancamentoFinanceiro

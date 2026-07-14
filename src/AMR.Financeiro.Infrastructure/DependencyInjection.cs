@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IContaReceberRepository, ContaReceberRepository>();
         services.AddScoped<ILancamentoFinanceiroRepository, LancamentoFinanceiroRepository>();
         services.AddScoped<IPlanoContasRepository, PlanoContasRepository>();
+        services.AddScoped<IPlanoDeContasRepository, PlanoDeContasRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<INFeRepository, NFeRepository>();
         services.AddScoped<IBoletoRepository, BoletoRepository>();
@@ -43,6 +44,8 @@ public static class DependencyInjection
         services.AddScoped<INFeService, NFeService>();
         services.AddScoped<IBoletoService, BoletoService>();
         services.AddScoped<IConciliacaoMatchingService, ConciliacaoMatchingService>();
+        services.AddScoped<IDreService, DreService>();
+        services.AddScoped<IPlanoContasSeedService, PlanoContasSeedService>();
 
         // Parsers de extrato — o handler recebe IEnumerable<IExtratoParser> e escolhe via Suporta()
         services.AddScoped<IExtratoParser, OfxParser>();
