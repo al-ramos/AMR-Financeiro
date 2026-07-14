@@ -35,9 +35,11 @@ public static class DependencyInjection
         services.AddScoped<IPlanoContasRepository, PlanoContasRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<INFeRepository, NFeRepository>();
+        services.AddScoped<IBoletoRepository, BoletoRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<INFeService, NFeService>();
+        services.AddScoped<IBoletoService, BoletoService>();
 
         services.AddSingleton<IEventPublisher, RabbitMqPublisher>();
 

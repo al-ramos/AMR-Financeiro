@@ -11,6 +11,9 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<LancamentoFinanceiro> Lancamentos => Set<LancamentoFinanceiro>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<NotaFiscal> NotasFiscais => Set<NotaFiscal>();
+    public DbSet<Boleto> Boletos => Set<Boleto>();
+    public DbSet<RemessaBancaria> RemessasBancarias => Set<RemessaBancaria>();
+    public DbSet<RetornoBancario> RetornosBancarios => Set<RetornoBancario>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -100,6 +103,50 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.CpfCnpjDestinatario).HasMaxLength(14).IsRequired();
             e.HasIndex(x => x.ChaveAcesso).IsUnique();
             e.HasIndex(x => new { x.CdFilial, x.Modelo, x.Serie, x.NumeroNF }).IsUnique();
+        });
+
+        // Boleto
+        mb.Entity<Boleto>(e =>
+        {
+            e.ToTable("boletos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Banco).HasConversion<int>();
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.NossoNumero).HasMaxLength(20).IsRequired();
+            e.Property(x => x.LinhaDigitavel).HasMaxLength(60).IsRequired();
+            e.Property(x => x.CodigoBarras).HasMaxLength(44).IsRequired();
+            e.Property(x => x.Valor).HasPrecision(18, 2);
+            e.Property(x => x.ValorPago).HasPrecision(18, 2);
+            e.Property(x => x.SacadoNome).HasMaxLength(200).IsRequired();
+            e.Property(x => x.SacadoCpfCnpj).HasMaxLength(14);
+            e.Property(x => x.SacadoEndereco).HasMaxLength(300);
+            e.Property(x => x.Instrucao1).HasMaxLength(200);
+            e.Property(x => x.Instrucao2).HasMaxLength(200);
+            e.HasIndex(x => new { x.Banco, x.NossoNumero }).IsUnique();
+        });
+
+        // RemessaBancaria
+        mb.Entity<RemessaBancaria>(e =>
+        {
+            e.ToTable("remessasbancarias");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Banco).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.TipoCnab).HasConversion<string>().HasMaxLength(10);
+            e.Property(x => x.NomeArquivo).HasMaxLength(100).IsRequired();
+            e.Property(x => x.ValorTotal).HasPrecision(18, 2);
+        });
+
+        // RetornoBancario
+        mb.Entity<RetornoBancario>(e =>
+        {
+            e.ToTable("retornosbancarios");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Banco).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.ArquivoNome).HasMaxLength(100).IsRequired();
+            e.Property(x => x.ValorLiquidado).HasPrecision(18, 2);
         });
     }
 }
