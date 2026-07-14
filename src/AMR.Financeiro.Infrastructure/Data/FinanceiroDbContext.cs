@@ -10,6 +10,7 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<PlanoContas> PlanoContas => Set<PlanoContas>();
     public DbSet<LancamentoFinanceiro> Lancamentos => Set<LancamentoFinanceiro>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<NotaFiscal> NotasFiscais => Set<NotaFiscal>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -79,6 +80,26 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.PasswordHash).HasMaxLength(500).IsRequired();
             e.Property(x => x.Role).HasMaxLength(50).IsRequired();
             e.HasIndex(x => x.Username).IsUnique();
+        });
+
+        // NotaFiscal (NF-e)
+        mb.Entity<NotaFiscal>(e =>
+        {
+            e.ToTable("notasfiscais");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Modelo).HasConversion<int>();
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Ambiente).HasConversion<int>();
+            e.Property(x => x.ChaveAcesso).HasMaxLength(44);
+            e.Property(x => x.ProtocoloAutorizacao).HasMaxLength(30);
+            e.Property(x => x.MotivoRejeicao).HasMaxLength(500);
+            e.Property(x => x.JustificativaCancelamento).HasMaxLength(255);
+            e.Property(x => x.ValorTotal).HasPrecision(18, 2);
+            e.Property(x => x.NomeDestinatario).HasMaxLength(200).IsRequired();
+            e.Property(x => x.CpfCnpjDestinatario).HasMaxLength(14).IsRequired();
+            e.HasIndex(x => x.ChaveAcesso).IsUnique();
+            e.HasIndex(x => new { x.CdFilial, x.Modelo, x.Serie, x.NumeroNF }).IsUnique();
         });
     }
 }
