@@ -18,6 +18,11 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<RetornoBancario> RetornosBancarios => Set<RetornoBancario>();
     public DbSet<ExtratoBancario> ExtratosBancarios => Set<ExtratoBancario>();
     public DbSet<MovimentacaoBancaria> MovimentacoesBancarias => Set<MovimentacaoBancaria>();
+    public DbSet<CentroCusto> CentrosCusto => Set<CentroCusto>();
+    public DbSet<OrcamentoCC> OrcamentosCC => Set<OrcamentoCC>();
+    public DbSet<RegraRateio> RegrasRateio => Set<RegraRateio>();
+    public DbSet<RegraRateioDestino> RegraRateioDestinos => Set<RegraRateioDestino>();
+    public DbSet<RateioRealizado> RateiosRealizados => Set<RateioRealizado>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -216,6 +221,84 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Hash).HasMaxLength(64).IsRequired();
             e.HasIndex(x => new { x.CdFilial, x.Hash }).IsUnique();
+        });
+
+        // CentroCusto (Card 23.5)
+        mb.Entity<CentroCusto>(e =>
+        {
+            e.ToTable("centroscusto");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Codigo).HasMaxLength(20).IsRequired();
+            e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.ResponsavelNome).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<CentroCusto>()
+             .WithMany()
+             .HasForeignKey(x => x.PaiId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.CdFilial, x.Codigo }).IsUnique();
+        });
+
+        // OrcamentoCC (Card 23.5)
+        mb.Entity<OrcamentoCC>(e =>
+        {
+            e.ToTable("orcamentoscc");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.ContaDescricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.ValorOrcado).HasPrecision(18, 2);
+            e.Property(x => x.ValorRealizado).HasPrecision(18, 2);
+            e.HasOne<CentroCusto>()
+             .WithMany()
+             .HasForeignKey(x => x.CentroCustoId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.CentroCustoId, x.ContaDescricao, x.Ano, x.Mes }).IsUnique();
+        });
+
+        // RegraRateio (Card 23.5)
+        mb.Entity<RegraRateio>(e =>
+        {
+            e.ToTable("regrasrateio");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Nome).HasMaxLength(150).IsRequired();
+            e.Property(x => x.ContaOrigemDescricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.TipoBase).HasConversion<string>().HasMaxLength(20);
+            e.HasMany(x => x.Destinos)
+             .WithOne()
+             .HasForeignKey(x => x.RegraRateioId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // RegraRateioDestino (Card 23.5)
+        mb.Entity<RegraRateioDestino>(e =>
+        {
+            e.ToTable("regrasrateiodestinos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Percentual).HasPrecision(5, 2);
+            e.Property(x => x.ValorBase).HasPrecision(18, 2);
+            e.HasOne<CentroCusto>()
+             .WithMany()
+             .HasForeignKey(x => x.CentroCustoId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RateioRealizado (Card 23.5)
+        mb.Entity<RateioRealizado>(e =>
+        {
+            e.ToTable("rateiosrealizados");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.ValorRateado).HasPrecision(18, 2);
+            e.Property(x => x.PercentualAplicado).HasPrecision(5, 2);
+            e.HasOne<RegraRateio>()
+             .WithMany()
+             .HasForeignKey(x => x.RegraRateioId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.RegraRateioId, x.Competencia });
         });
     }
 }
