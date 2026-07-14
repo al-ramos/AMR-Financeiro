@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AMR.Financeiro.Domain.Entities;
+using AMR.Financeiro.Infrastructure.Repositories;
 
 namespace AMR.Financeiro.Infrastructure.Data;
 
@@ -14,6 +15,8 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<Boleto> Boletos => Set<Boleto>();
     public DbSet<RemessaBancaria> RemessasBancarias => Set<RemessaBancaria>();
     public DbSet<RetornoBancario> RetornosBancarios => Set<RetornoBancario>();
+    public DbSet<ExtratoBancario> ExtratosBancarios => Set<ExtratoBancario>();
+    public DbSet<MovimentacaoBancaria> MovimentacoesBancarias => Set<MovimentacaoBancaria>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -147,6 +150,52 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.Banco).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.ArquivoNome).HasMaxLength(100).IsRequired();
             e.Property(x => x.ValorLiquidado).HasPrecision(18, 2);
+        });
+
+        // ExtratoBancario (Conciliação)
+        mb.Entity<ExtratoBancario>(e =>
+        {
+            e.ToTable("extratosbancarios");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Banco).HasMaxLength(100).IsRequired();
+            e.Property(x => x.ContaCorrente).HasMaxLength(30).IsRequired();
+            e.Property(x => x.SaldoInicial).HasPrecision(18, 2);
+            e.Property(x => x.SaldoFinal).HasPrecision(18, 2);
+            e.Property(x => x.TotalCreditos).HasPrecision(18, 2);
+            e.Property(x => x.TotalDebitos).HasPrecision(18, 2);
+            e.Property(x => x.Formato).HasConversion<string>().HasMaxLength(10);
+            e.Property(x => x.ArquivoOriginal).HasMaxLength(200);
+            e.HasIndex(x => x.CdFilial);
+        });
+
+        // MovimentacaoBancaria (Conciliação)
+        mb.Entity<MovimentacaoBancaria>(e =>
+        {
+            e.ToTable("movimentacoesbancarias");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Valor).HasPrecision(18, 2);
+            e.Property(x => x.Descricao).HasMaxLength(300).IsRequired();
+            e.Property(x => x.CodigoDoc).HasMaxLength(50);
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(10);
+            e.Property(x => x.StatusConciliacao).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.ConciliadoPor).HasMaxLength(200);
+            e.HasOne<ExtratoBancario>()
+             .WithMany()
+             .HasForeignKey(x => x.ExtratoId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.ExtratoId, x.StatusConciliacao });
+        });
+
+        // ExtratoHash (idempotência da importação)
+        mb.Entity<ExtratoHash>(e =>
+        {
+            e.ToTable("extratos_hashes");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Hash).HasMaxLength(64).IsRequired();
+            e.HasIndex(x => new { x.CdFilial, x.Hash }).IsUnique();
         });
     }
 }
