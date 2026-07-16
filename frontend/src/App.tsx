@@ -5,6 +5,10 @@ import { ContasPagarPage } from './pages/ContasPagarPage';
 import { ContasReceberPage } from './pages/ContasReceberPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
+import { ContasBancariasPage } from './pages/ContasBancariasPage';
+import { AgingPage } from './pages/AgingPage';
+import { ParcelamentosPage } from './pages/ParcelamentosPage';
+import { FluxoCaixaPage } from './pages/FluxoCaixaPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const NAV = [
@@ -17,9 +21,18 @@ const NAV = [
   {
     section: 'Movimento',
     items: [
-      { to: '/lancamentos',    icon: 'bi-journal-text',    label: 'Lançamentos' },
-      { to: '/contas-pagar',   icon: 'bi-arrow-up-circle', label: 'Contas a Pagar' },
+      { to: '/lancamentos',    icon: 'bi-journal-text',      label: 'Lançamentos' },
+      { to: '/contas-pagar',   icon: 'bi-arrow-up-circle',   label: 'Contas a Pagar' },
       { to: '/contas-receber', icon: 'bi-arrow-down-circle', label: 'Contas a Receber' },
+      { to: '/financeiro/parcelamentos', icon: 'bi-credit-card-2-front', label: 'Parcelamentos' },
+    ],
+  },
+  {
+    section: 'Financeiro',
+    items: [
+      { to: '/financeiro/contas-bancarias', icon: 'bi-bank',          label: 'Contas Bancárias' },
+      { to: '/financeiro/aging',            icon: 'bi-hourglass-split', label: 'Aging Report' },
+      { to: '/financeiro/fluxo-caixa',      icon: 'bi-graph-up-arrow', label: 'Fluxo de Caixa' },
     ],
   },
   {
@@ -31,12 +44,16 @@ const NAV = [
 ];
 
 const PAGE_LABELS: Record<string, { title: string; subtitle: string }> = {
-  '/':               { title: 'Lançamentos',      subtitle: 'Histórico de movimentos' },
-  '/lancamentos':    { title: 'Lançamentos',      subtitle: 'Histórico de movimentos' },
-  '/plano-contas':   { title: 'Plano de Contas',  subtitle: 'Estrutura contábil' },
-  '/contas-pagar':   { title: 'Contas a Pagar',   subtitle: 'Controle de obrigações' },
-  '/contas-receber': { title: 'Contas a Receber', subtitle: 'Controle de recebimentos' },
-  '/dashboard':      { title: 'Dashboard',        subtitle: 'Visão gerencial' },
+  '/':               { title: 'Lançamentos',       subtitle: 'Histórico de movimentos' },
+  '/lancamentos':    { title: 'Lançamentos',       subtitle: 'Histórico de movimentos' },
+  '/plano-contas':   { title: 'Plano de Contas',   subtitle: 'Estrutura contábil' },
+  '/contas-pagar':   { title: 'Contas a Pagar',    subtitle: 'Controle de obrigações' },
+  '/contas-receber': { title: 'Contas a Receber',  subtitle: 'Controle de recebimentos' },
+  '/dashboard':      { title: 'Dashboard',         subtitle: 'Visão gerencial' },
+  '/financeiro/contas-bancarias': { title: 'Contas Bancárias', subtitle: 'Multi-banco — saldos calculados em tempo real' },
+  '/financeiro/aging':            { title: 'Aging Report',     subtitle: 'Parcelas em aberto por faixa de vencimento' },
+  '/financeiro/parcelamentos':    { title: 'Parcelamentos',    subtitle: 'Gestão de parcelas e pagamentos' },
+  '/financeiro/fluxo-caixa':     { title: 'Fluxo de Caixa',   subtitle: 'Projeção financeira 30 / 60 / 90 dias' },
 };
 
 // ── Guard de rota autenticada ──────────────────────────────────────────────────
@@ -139,6 +156,10 @@ function AppLayout() {
             <Route path="/contas-pagar"    element={<ContasPagarPage />} />
             <Route path="/contas-receber"  element={<ContasReceberPage />} />
             <Route path="/dashboard"       element={<DashboardPage />} />
+            <Route path="/financeiro/contas-bancarias" element={<ContasBancariasPage />} />
+            <Route path="/financeiro/aging"            element={<AgingPage />} />
+            <Route path="/financeiro/parcelamentos"    element={<ParcelamentosPage />} />
+            <Route path="/financeiro/fluxo-caixa"      element={<FluxoCaixaPage />} />
           </Routes>
         </main>
       </div>

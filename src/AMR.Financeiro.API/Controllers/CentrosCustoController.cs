@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,10 @@ public class CentrosCustoController(IMediator mediator) : ControllerBase
             var id = await mediator.Send(cmd, ct);
             return Created($"/api/centros-custo/{id}", new { id });
         }
+        catch (ValidationException vex)
+        {
+            return BadRequest(new { erros = vex.Errors.Select(e => e.ErrorMessage) });
+        }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentOutOfRangeException)
         {
             return BadRequest(new { erro = ex.Message });
@@ -50,6 +55,10 @@ public class CentrosCustoController(IMediator mediator) : ControllerBase
         {
             var result = await mediator.Send(cmd, ct);
             return Ok(new { sucesso = result });
+        }
+        catch (ValidationException vex)
+        {
+            return BadRequest(new { erros = vex.Errors.Select(e => e.ErrorMessage) });
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentOutOfRangeException)
         {
@@ -74,6 +83,10 @@ public class CentrosCustoController(IMediator mediator) : ControllerBase
             var id = await mediator.Send(cmd, ct);
             return Created($"/api/centros-custo/rateio/regras/{id}", new { id });
         }
+        catch (ValidationException vex)
+        {
+            return BadRequest(new { erros = vex.Errors.Select(e => e.ErrorMessage) });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { erro = ex.Message });
@@ -89,6 +102,10 @@ public class CentrosCustoController(IMediator mediator) : ControllerBase
         {
             var result = await mediator.Send(new ExecutarRateioCommand(cdFilial, ano, mes), ct);
             return Ok(result);
+        }
+        catch (ValidationException vex)
+        {
+            return BadRequest(new { erros = vex.Errors.Select(e => e.ErrorMessage) });
         }
         catch (InvalidOperationException ex)
         {

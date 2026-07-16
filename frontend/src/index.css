@@ -145,3 +145,129 @@ html, body, #root {
 }
 
 .amr-empty i { font-size: 2.5rem; margin-bottom: .75rem; }
+
+/* ---------- Spin animation ---------- */
+@keyframes amr-spin { to { transform: rotate(360deg); } }
+.amr-spin { display: inline-block; animation: amr-spin .8s linear infinite; }
+
+/* ---------- Generic card ---------- */
+.amr-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+/* ---------- Buttons ---------- */
+.amr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: .42rem .9rem;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  color: #495057;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1.4;
+}
+.amr-btn:hover { background: #f8f9fa; }
+.amr-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.amr-btn-primary { background: #1976d2; color: #fff; border-color: #1976d2; }
+.amr-btn-primary:hover { background: #1565c0; border-color: #1565c0; }
+
+.amr-btn-danger { background: #fff; color: #c62828; border-color: #ef9a9a; }
+.amr-btn-danger:hover { background: #ffebee; }
+
+.amr-btn-sm { padding: .25rem .6rem; font-size: 12px; }
+
+/* ---------- Form ---------- */
+.amr-form-group { display: flex; flex-direction: column; gap: 4px; }
+.amr-form-group label { font-size: 12px; font-weight: 500; color: #546e7a; }
+
+.amr-input {
+  padding: .45rem .75rem;
+  font-size: 13px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  color: #212529;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.amr-input:focus { border-color: #1976d2; box-shadow: 0 0 0 3px #1976d222; }
+
+/* ---------- Table ---------- */
+.amr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.amr-table th {
+  text-align: left;
+  padding: .5rem .75rem;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #6c757d;
+  border-bottom: 2px solid #e9ecef;
+}
+.amr-table td {
+  padding: .6rem .75rem;
+  border-bottom: 1px solid #f0f4f8;
+  color: #37474f;
+  vertical-align: middle;
+}
+.amr-table tr:last-child td { border-bottom: none; }
+.amr-table tr:hover td { background: #f8f9fa; }
+
+/* ---------- Alert ---------- */
+.amr-alert { padding: .6rem .9rem; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+.amr-alert-danger { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+/* ---------- Modal ---------- */
+.amr-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.amr-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  display: flex; flex-direction: column;
+}
+
+.amr-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 15px; font-weight: 600; color: #212529;
+}
+
+.amr-modal-close {
+  background: none; border: none; font-size: 20px;
+  color: #9e9e9e; cursor: pointer; line-height: 1; padding: 0;
+}
+.amr-modal-close:hover { color: #212529; }
+
+.amr-modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
+
+.amr-modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e9ecef;
+  display: flex; justify-content: flex-end; gap: 8px;
+}

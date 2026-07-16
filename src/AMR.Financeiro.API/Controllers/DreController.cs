@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,10 @@ public class DreController(IMediator mediator) : ControllerBase
         {
             return BadRequest(new { erro = ex.Message });
         }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
+        }
         catch (InvalidOperationException ex)
         {
             return Conflict(new { erro = ex.Message });
@@ -53,9 +58,16 @@ public class DreController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Atualizar(
         int id, [FromBody] AtualizarContaRequest req, CancellationToken ct)
     {
-        var ok = await mediator.Send(
-            new AtualizarContaCommand(id, req.Descricao, req.GrupoDre, req.OrdemExibicao), ct);
-        return ok ? Ok(new { id }) : NotFound();
+        try
+        {
+            var ok = await mediator.Send(
+                new AtualizarContaCommand(id, req.Descricao, req.GrupoDre, req.OrdemExibicao), ct);
+            return ok ? Ok(new { id }) : NotFound();
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
+        }
     }
 
     // DELETE api/plano-contas/5 — inativação lógica; 409 se houver lançamentos ou filhas
@@ -97,6 +109,10 @@ public class DreController(IMediator mediator) : ControllerBase
         {
             return BadRequest(new { erro = ex.Message });
         }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
+        }
     }
 
     // GET api/dre/export?cdFilial=1&ano=2026&mes=7 — CSV (;) pt-BR, abre direto no Excel
@@ -121,6 +137,42 @@ public class DreController(IMediator mediator) : ControllerBase
         catch (ArgumentOutOfRangeException ex)
         {
             return BadRequest(new { erro = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
+    // GET api/dre/export/excel?cdFilial=1&ano=2026&mes=7 — SpreadsheetML (stub; ClosedXML pendente)
+    [HttpGet("dre/export/excel")]
+    public async Task<IActionResult> ExportDreExcel(
+        [FromQuery] int cdFilial, [FromQuery] int ano, [FromQuery] int mes, CancellationToken ct)
+    {
+        try
+        {
+            var arquivo = await mediator.Send(new ExportDreExcelQuery(cdFilial, ano, mes), ct);
+            return File(arquivo.Conteudo, arquivo.ContentType, arquivo.NomeArquivo);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
+    // GET api/dre/export/pdf?cdFilial=1&ano=2026&mes=7 — PDF 1.4 (stub; QuestPDF pendente)
+    [HttpGet("dre/export/pdf")]
+    public async Task<IActionResult> ExportDrePdf(
+        [FromQuery] int cdFilial, [FromQuery] int ano, [FromQuery] int mes, CancellationToken ct)
+    {
+        try
+        {
+            var arquivo = await mediator.Send(new ExportDrePdfQuery(cdFilial, ano, mes), ct);
+            return File(arquivo.Conteudo, arquivo.ContentType, arquivo.NomeArquivo);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { erros = ex.Errors.Select(e => e.ErrorMessage) });
         }
     }
 }

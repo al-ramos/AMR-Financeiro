@@ -32,6 +32,18 @@ public class LancamentoFinanceiroRepository(FinanceiroDbContext ctx) : ILancamen
             .OrderByDescending(x => x.DataLancamento)
             .ToListAsync(ct);
 
+    public async Task<List<LancamentoFinanceiro>> ObterFuturosAsync(DateOnly aPartirDe, DateOnly ate, CancellationToken ct = default) =>
+        await ctx.Lancamentos
+            .Where(x => x.DataLancamento >= aPartirDe && x.DataLancamento <= ate)
+            .OrderBy(x => x.DataLancamento)
+            .ToListAsync(ct);
+
     public async Task AdicionarAsync(LancamentoFinanceiro lancamento, CancellationToken ct = default) =>
         await ctx.Lancamentos.AddAsync(lancamento, ct);
+
+    public Task AtualizarAsync(LancamentoFinanceiro lancamento, CancellationToken ct = default)
+    {
+        ctx.Lancamentos.Update(lancamento);
+        return Task.CompletedTask;
+    }
 }

@@ -40,12 +40,15 @@ public static class DependencyInjection
         services.AddScoped<IBoletoRepository, BoletoRepository>();
         services.AddScoped<IConciliacaoRepository, ConciliacaoRepository>();
         services.AddScoped<ICentroCustoRepository, CentroCustoRepository>();
+        services.AddScoped<IContaBancariaRepository, ContaBancariaRepository>();
+        services.AddScoped<IParcelamentoRepository, ParcelamentoRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<INFeService, NFeService>();
         services.AddScoped<IBoletoService, BoletoService>();
         services.AddScoped<IConciliacaoMatchingService, ConciliacaoMatchingService>();
         services.AddScoped<IDreService, DreService>();
+        services.AddScoped<IDreExportService, DreExportService>();
         services.AddScoped<IRateioService, RateioService>();
         services.AddScoped<IPlanoContasSeedService, PlanoContasSeedService>();
 

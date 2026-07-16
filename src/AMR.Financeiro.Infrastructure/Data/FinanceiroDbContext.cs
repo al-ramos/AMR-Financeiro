@@ -23,6 +23,9 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
     public DbSet<RegraRateio> RegrasRateio => Set<RegraRateio>();
     public DbSet<RegraRateioDestino> RegraRateioDestinos => Set<RegraRateioDestino>();
     public DbSet<RateioRealizado> RateiosRealizados => Set<RateioRealizado>();
+    public DbSet<ContaBancaria> ContasBancarias => Set<ContaBancaria>();
+    public DbSet<Parcelamento> Parcelamentos => Set<Parcelamento>();
+    public DbSet<Parcela> Parcelas => Set<Parcela>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -99,6 +102,20 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
              .WithMany(x => x.Lancamentos)
              .HasForeignKey(x => x.PlanoContasId)
              .OnDelete(DeleteBehavior.Restrict);
+            // Card 23.6 — vínculo opcional com conta bancária (saldo/extrato multi-banco)
+            e.HasOne<ContaBancaria>()
+             .WithMany()
+             .HasForeignKey(x => x.ContaBancariaId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.ContaBancariaId);
+            // Card 23.5 — vínculo opcional com centro de custo (realizado por CC)
+            e.HasOne<CentroCusto>()
+             .WithMany()
+             .HasForeignKey(x => x.CentroCustoId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.CentroCustoId);
         });
 
         // Usuario
@@ -299,6 +316,53 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
              .HasForeignKey(x => x.RegraRateioId)
              .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.RegraRateioId, x.Competencia });
+        });
+
+        // ContaBancaria (Card 23.6 — Multi-banco)
+        mb.Entity<ContaBancaria>(e =>
+        {
+            e.ToTable("contas_bancarias");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Nome).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Banco).HasMaxLength(100);
+            e.Property(x => x.Agencia).HasMaxLength(20);
+            e.Property(x => x.Conta).HasMaxLength(30);
+            e.Property(x => x.TipoConta).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Ativa).HasDefaultValue(true);
+            e.Property(x => x.SaldoInicial).HasPrecision(18, 2);
+            e.HasIndex(x => x.Ativa);
+        });
+
+        // Parcelamento (Card 23.6)
+        mb.Entity<Parcelamento>(e =>
+        {
+            e.ToTable("parcelamentos");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.ValorTotal).HasPrecision(18, 2);
+            e.Property(x => x.TipoVinculo).HasConversion<string>().HasMaxLength(20);
+            e.HasMany(x => x.Parcelas)
+             .WithOne()
+             .HasForeignKey(x => x.ParcelamentoId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Parcela (Card 23.6)
+        mb.Entity<Parcela>(e =>
+        {
+            e.ToTable("parcelas");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
+            e.Property(x => x.ValorParcela).HasPrecision(18, 2);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<ContaBancaria>()
+             .WithMany()
+             .HasForeignKey(x => x.ContaBancariaId)
+             .IsRequired(false)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.Status, x.DataVencimento });
         });
     }
 }
