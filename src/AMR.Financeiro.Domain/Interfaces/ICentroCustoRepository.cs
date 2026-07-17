@@ -21,4 +21,7 @@ public interface ICentroCustoRepository
     Task<bool> RateioJaExecutadoAsync(int cdFilial, DateOnly competencia, CancellationToken ct = default);
     Task AddRateiosAsync(List<RateioRealizado> rateios, CancellationToken ct = default);
     Task<List<OrcamentoCC>> GetAlertasAsync(int cdFilial, CancellationToken ct = default);
+    Task<List<LancamentoFinanceiro>> GetLancamentosPorCentroCustoAsync(int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default);
+    Task<List<RateioRealizado>> GetRateiosPorCentroCustoAsync(int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default);
+    Task<List<RegraRateio>> GetRegrasPorIdsAsync(List<int> ids, CancellationToken ct = default);
 }

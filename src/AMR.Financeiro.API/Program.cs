@@ -129,6 +129,7 @@ using (var scope = app.Services.CreateScope())
     await ctx.Database.MigrateAsync();
     await PlanoContasSeed.AplicarAsync(ctx, cdFilial: 1);
     await LancamentosDemoSeed.AplicarAsync(ctx, cdFilial: 1);
+    await CentroCustoSeed.AplicarAsync(ctx, cdFilial: 1);
 
     // Cria usuário admin padrão se não existir — SQL direto para evitar EF Core 9 + SQLite sentinel bug
     var adminExists = await ctx.Usuarios.AnyAsync(u => u.Username == "admin");

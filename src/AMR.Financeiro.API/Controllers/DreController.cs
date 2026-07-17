@@ -144,7 +144,7 @@ public class DreController(IMediator mediator) : ControllerBase
         }
     }
 
-    // GET api/dre/export/excel?cdFilial=1&ano=2026&mes=7 — SpreadsheetML (stub; ClosedXML pendente)
+    // GET api/dre/export/excel?cdFilial=1&ano=2026&mes=7 — xlsx real via ClosedXML
     [HttpGet("dre/export/excel")]
     public async Task<IActionResult> ExportDreExcel(
         [FromQuery] int cdFilial, [FromQuery] int ano, [FromQuery] int mes, CancellationToken ct)
@@ -160,7 +160,7 @@ public class DreController(IMediator mediator) : ControllerBase
         }
     }
 
-    // GET api/dre/export/pdf?cdFilial=1&ano=2026&mes=7 — PDF 1.4 (stub; QuestPDF pendente)
+    // GET api/dre/export/pdf?cdFilial=1&ano=2026&mes=7 — PDF via QuestPDF
     [HttpGet("dre/export/pdf")]
     public async Task<IActionResult> ExportDrePdf(
         [FromQuery] int cdFilial, [FromQuery] int ano, [FromQuery] int mes, CancellationToken ct)

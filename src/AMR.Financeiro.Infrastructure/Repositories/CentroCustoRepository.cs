@@ -84,6 +84,33 @@ public class CentroCustoRepository(FinanceiroDbContext ctx) : ICentroCustoReposi
         await ctx.SaveChangesAsync(ct);
     }
 
+    public async Task<List<LancamentoFinanceiro>> GetLancamentosPorCentroCustoAsync(
+        int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default) =>
+        await ctx.Lancamentos
+            .AsNoTracking()
+            .Include(l => l.PlanoContas)
+            .Where(l => l.CentroCustoId == centroCustoId
+                     && l.DataLancamento >= inicio
+                     && l.DataLancamento <= fim)
+            .OrderBy(l => l.DataLancamento)
+            .ToListAsync(ct);
+
+    public async Task<List<RateioRealizado>> GetRateiosPorCentroCustoAsync(
+        int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default) =>
+        await ctx.RateiosRealizados
+            .AsNoTracking()
+            .Where(rr => rr.CentroCustoId == centroCustoId
+                      && rr.Competencia >= inicio
+                      && rr.Competencia <= fim)
+            .OrderBy(rr => rr.Competencia)
+            .ToListAsync(ct);
+
+    public async Task<List<RegraRateio>> GetRegrasPorIdsAsync(List<int> ids, CancellationToken ct = default) =>
+        await ctx.RegrasRateio
+            .AsNoTracking()
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync(ct);
+
     public async Task<List<OrcamentoCC>> GetAlertasAsync(int cdFilial, CancellationToken ct = default) =>
         await (from o in ctx.OrcamentosCC
                join c in ctx.CentrosCusto on o.CentroCustoId equals c.Id

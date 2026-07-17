@@ -1,4 +1,4 @@
-name: CI Frontend
+name: CI — AMR Financeiro
 
 on:
   push:
@@ -7,8 +7,30 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build-backend:
+    name: Build & Test .NET
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore
+        run: dotnet restore src/AMR.Financeiro.API/AMR.Financeiro.API.csproj
+
+      - name: Build
+        run: dotnet build src/AMR.Financeiro.API/AMR.Financeiro.API.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test tests/AMR.Financeiro.Tests/AMR.Financeiro.Tests.csproj --configuration Release --verbosity normal
+
+  build-frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
 
     steps:
@@ -20,42 +42,12 @@ jobs:
         with:
           node-version: '20.x'
           cache: 'npm'
-          cache-dependency-path: src/AMR.Financeiro.Web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        working-directory: src/AMR.Financeiro.Web
+        working-directory: frontend
         run: npm ci
 
-      - name: Build
-        working-directory: src/AMR.Financeiro.Web
+      - name: Build (TypeScript + Vite)
+        working-directory: frontend
         run: npm run build
-
-      - name: Run unit tests + coverage
-        working-directory: src/AMR.Financeiro.Web
-        run: npm run test -- --coverage --watchAll=false --ci
-
-      # Gera resumo de cobertura no GitHub Actions Job Summary
-      - name: Generate coverage summary
-        if: always()
-        working-directory: src/AMR.Financeiro.Web
-        run: |
-          echo "## 📊 Frontend Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat coverage/coverage-summary.json | node -e "
-            const data = require('/dev/stdin');
-            const t = data.total;
-            console.log('Statements : ' + t.statements.pct + '% (' + t.statements.covered + '/' + t.statements.total + ')');
-            console.log('Branches   : ' + t.branches.pct   + '% (' + t.branches.covered   + '/' + t.branches.total   + ')');
-            console.log('Functions  : ' + t.functions.pct  + '% (' + t.functions.covered  + '/' + t.functions.total  + ')');
-            console.log('Lines      : ' + t.lines.pct      + '% (' + t.lines.covered      + '/' + t.lines.total      + ')');
-          " >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-frontend
-          path: src/AMR.Financeiro.Web/coverage/
-          retention-days: 14

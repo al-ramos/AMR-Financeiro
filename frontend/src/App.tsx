@@ -9,6 +9,9 @@ import { ContasBancariasPage } from './pages/ContasBancariasPage';
 import { AgingPage } from './pages/AgingPage';
 import { ParcelamentosPage } from './pages/ParcelamentosPage';
 import { FluxoCaixaPage } from './pages/FluxoCaixaPage';
+import { DREPage } from './pages/DREPage';
+import { CentrosCustoPage } from './pages/CentrosCustoPage';
+import { CentroCustoDetalhePage } from './pages/CentroCustoDetalhePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const NAV = [
@@ -33,12 +36,14 @@ const NAV = [
       { to: '/financeiro/contas-bancarias', icon: 'bi-bank',          label: 'Contas Bancárias' },
       { to: '/financeiro/aging',            icon: 'bi-hourglass-split', label: 'Aging Report' },
       { to: '/financeiro/fluxo-caixa',      icon: 'bi-graph-up-arrow', label: 'Fluxo de Caixa' },
+      { to: '/financeiro/centros-custo',    icon: 'bi-diagram-2',      label: 'Centros de Custo' },
     ],
   },
   {
     section: 'Relatórios',
     items: [
       { to: '/dashboard', icon: 'bi-bar-chart-line', label: 'Dashboard' },
+      { to: '/financeiro/dre', icon: 'bi-clipboard-data', label: 'DRE' },
     ],
   },
 ];
@@ -54,6 +59,8 @@ const PAGE_LABELS: Record<string, { title: string; subtitle: string }> = {
   '/financeiro/aging':            { title: 'Aging Report',     subtitle: 'Parcelas em aberto por faixa de vencimento' },
   '/financeiro/parcelamentos':    { title: 'Parcelamentos',    subtitle: 'Gestão de parcelas e pagamentos' },
   '/financeiro/fluxo-caixa':     { title: 'Fluxo de Caixa',   subtitle: 'Projeção financeira 30 / 60 / 90 dias' },
+  '/financeiro/dre':             { title: 'DRE',              subtitle: 'Demonstração de Resultado do Exercício' },
+  '/financeiro/centros-custo':   { title: 'Centros de Custo', subtitle: 'Hierarquia, orçamento e rateio de custos' },
 };
 
 // ── Guard de rota autenticada ──────────────────────────────────────────────────
@@ -160,6 +167,9 @@ function AppLayout() {
             <Route path="/financeiro/aging"            element={<AgingPage />} />
             <Route path="/financeiro/parcelamentos"    element={<ParcelamentosPage />} />
             <Route path="/financeiro/fluxo-caixa"      element={<FluxoCaixaPage />} />
+            <Route path="/financeiro/dre"              element={<DREPage />} />
+            <Route path="/financeiro/centros-custo"     element={<CentrosCustoPage />} />
+            <Route path="/financeiro/centros-custo/:id" element={<CentroCustoDetalhePage />} />
           </Routes>
         </main>
       </div>

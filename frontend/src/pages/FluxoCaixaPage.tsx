@@ -81,7 +81,7 @@ function LineChart({ dias }: { dias: FluxoCaixaDiaDto[] }) {
       ))}
 
       {/* X axis labels */}
-      {dias.filter((_, i) => i % labelStep === 0 || i === dias.length - 1).map((d, _, arr) => {
+      {dias.filter((_, i) => i % labelStep === 0 || i === dias.length - 1).map(d => {
         const idx = dias.indexOf(d);
         return (
           <text key={idx} x={x(idx)} y={H - 6} textAnchor="middle" fontSize="10" fill="#90a4ae">

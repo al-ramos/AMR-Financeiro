@@ -66,6 +66,26 @@ public class CentrosCustoController(IMediator mediator) : ControllerBase
         }
     }
 
+    // GET api/centros-custo/5/dre?dataInicio=2026-01-01&dataFim=2026-12-31
+    [HttpGet("{id:int}/dre")]
+    public async Task<IActionResult> GetDre(
+        int id, [FromQuery] DateOnly dataInicio, [FromQuery] DateOnly dataFim, CancellationToken ct)
+    {
+        try
+        {
+            var result = await mediator.Send(new GetDreCentroCustoQuery(id, dataInicio, dataFim), ct);
+            return Ok(result);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(new { erro = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { erro = ex.Message });
+        }
+    }
+
     // GET api/centros-custo/alertas?cdFilial=1
     [HttpGet("alertas")]
     public async Task<IActionResult> GetAlertas([FromQuery] int cdFilial, CancellationToken ct)
