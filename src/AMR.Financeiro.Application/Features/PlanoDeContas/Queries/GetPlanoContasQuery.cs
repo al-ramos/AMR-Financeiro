@@ -4,8 +4,6 @@ using AMR.Financeiro.Domain.Interfaces;
 
 namespace AMR.Financeiro.Application.Features.PlanoDeContas.Queries;
 
-// Nome igual ao query legado (Features.PlanoContas.Queries.GetPlanoContasQuery),
-// porém em namespace distinto — o controller novo importa apenas este.
 public record GetPlanoContasQuery(int CdFilial, bool IncluirInativos = false) : IRequest<List<ContaContabilDto>>;
 
 public record ContaContabilDto(

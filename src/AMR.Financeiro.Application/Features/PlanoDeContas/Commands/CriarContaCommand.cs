@@ -4,8 +4,6 @@ using AMR.Financeiro.Domain.Interfaces;
 
 namespace AMR.Financeiro.Application.Features.PlanoDeContas.Commands;
 
-// Módulo novo (Card 23.4) fica em Features/PlanoDeContas para não colidir com o
-// módulo legado Features/PlanoContas (que já define GetPlanoContasQuery etc.).
 public record CriarContaCommand(
     int CdFilial, string Codigo, string Descricao,
     TipoContaContabil Tipo, NaturezaConta Natureza,
