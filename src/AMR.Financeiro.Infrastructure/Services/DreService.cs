@@ -13,8 +13,8 @@ namespace AMR.Financeiro.Infrastructure.Services;
 /// Fonte dos valores: a tabela Lancamentos (LancamentoFinanceiro), que é o razão do sistema —
 /// ela já consolida os recebimentos de ContasReceber (Tipo=Credito, Origem=ContaReceber),
 /// os pagamentos de ContasPagar (Tipo=Debito, Origem=ContaPagar) e lançamentos manuais.
-/// Como LancamentoFinanceiro.PlanoContasId referencia o plano legado (tabela PlanoContas),
-/// o vínculo com o plano gerencial novo (tabela planodecontas) é feito pelo par (CdFilial, Codigo).
+/// LancamentoFinanceiro.PlanoContasId referencia diretamente a conta em planodecontas —
+/// o plano é único desde o FIN-01, e não há mais ponte por (CdFilial, Codigo).
 /// </summary>
 public class DreService(FinanceiroDbContext ctx) : IDreService
 {
@@ -30,10 +30,13 @@ public class DreService(FinanceiroDbContext ctx) : IDreService
 
     public async Task<DreResult> CalcularAsync(int cdFilial, int ano, int mes, CancellationToken ct = default)
     {
-        // Contas analíticas ativas — só nível 5 aceita lançamentos
+        // Contas analíticas de resultado. As patrimoniais (GrupoDRE.NaoAplicavel)
+        // existem no razão, recebem as baixas de CP/CR, e não entram em linha nenhuma.
         var contas = await ctx.PlanoDeContas
             .AsNoTracking()
-            .Where(c => c.CdFilial == cdFilial && c.Nivel == 5 && c.Ativo)
+            .Where(c => c.CdFilial == cdFilial && c.Ativo
+                     && c.AceitaLancamentos
+                     && c.GrupoDRE != GrupoDRE.NaoAplicavel)
             .OrderBy(c => c.OrdemExibicao)
             .ThenBy(c => c.Codigo)
             .ToListAsync(ct);
@@ -54,6 +57,8 @@ public class DreService(FinanceiroDbContext ctx) : IDreService
 
         foreach (var grupo in Enum.GetValues<GrupoDRE>())
         {
+            if (grupo == GrupoDRE.NaoAplicavel) continue;
+
             var subtotal = EhSubtotal.GetValueOrDefault(grupo);
 
             if (subtotal)
@@ -109,21 +114,23 @@ public class DreService(FinanceiroDbContext ctx) : IDreService
         var inicio = new DateOnly(ano, mes, 1);
         var fim = inicio.AddMonths(1).AddDays(-1);
 
-        // Lançamentos do período agrupados por código do plano legado e tipo (Débito/Crédito).
+        // Lançamentos do período agrupados pela conta e pelo tipo (Débito/Crédito).
         // Inclui recebimentos (ContasReceber), pagamentos (ContasPagar) e lançamentos manuais,
         // pois todos são materializados na tabela Lancamentos.
-        var somas = await (
-            from l in ctx.Lancamentos.AsNoTracking()
-            join p in ctx.PlanoContas.AsNoTracking() on l.PlanoContasId equals p.Id
-            where l.CdFilial == cdFilial
-               && l.DataLancamento >= inicio
-               && l.DataLancamento <= fim
-            group l by new { p.Codigo, l.Tipo } into g
-            select new { g.Key.Codigo, g.Key.Tipo, Total = g.Sum(x => x.Valor) })
+        //
+        // A agregação é por PlanoContasId direto. Antes havia uma ponte por Codigo entre o
+        // plano legado e este — e era ela que deixava o Id da tela ser resolvido contra a
+        // outra tabela, contabilizando o lançamento em outra conta (FIN-01).
+        var somas = await ctx.Lancamentos.AsNoTracking()
+            .Where(l => l.CdFilial == cdFilial
+                     && l.DataLancamento >= inicio
+                     && l.DataLancamento <= fim)
+            .GroupBy(l => new { l.PlanoContasId, l.Tipo })
+            .Select(g => new { g.Key.PlanoContasId, g.Key.Tipo, Total = g.Sum(x => x.Valor) })
             .ToListAsync(ct);
 
-        var porCodigo = somas
-            .GroupBy(s => s.Codigo)
+        var porConta = somas
+            .GroupBy(s => s.PlanoContasId)
             .ToDictionary(
                 g => g.Key,
                 g => (Creditos: g.Where(x => x.Tipo == TipoLancamento.Credito).Sum(x => x.Total),
@@ -132,7 +139,7 @@ public class DreService(FinanceiroDbContext ctx) : IDreService
         var saldos = new Dictionary<int, decimal>();
         foreach (var conta in contas)
         {
-            var (creditos, debitos) = porCodigo.GetValueOrDefault(conta.Codigo);
+            var (creditos, debitos) = porConta.GetValueOrDefault(conta.Id);
             saldos[conta.Id] = conta.Natureza == NaturezaConta.Credora
                 ? creditos - debitos
                 : debitos - creditos;

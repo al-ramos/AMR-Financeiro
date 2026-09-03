@@ -8,11 +8,11 @@ namespace AMR.Financeiro.Infrastructure.Repositories;
 public class LancamentoFinanceiroRepository(FinanceiroDbContext ctx) : ILancamentoFinanceiroRepository
 {
     public Task<LancamentoFinanceiro?> ObterPorIdAsync(int id, CancellationToken ct = default) =>
-        ctx.Lancamentos.Include(x => x.PlanoContas).FirstOrDefaultAsync(x => x.Id == id, ct);
+        ctx.Lancamentos.Include(x => x.Conta).FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<IEnumerable<LancamentoFinanceiro>> ObterPorFilialAsync(int cdFilial, CancellationToken ct = default) =>
         await ctx.Lancamentos
-            .Include(x => x.PlanoContas)
+            .Include(x => x.Conta)
             .Where(x => x.CdFilial == cdFilial)
             .OrderByDescending(x => x.DataLancamento)
             .ToListAsync(ct);
@@ -25,7 +25,7 @@ public class LancamentoFinanceiroRepository(FinanceiroDbContext ctx) : ILancamen
 
     public async Task<IEnumerable<LancamentoFinanceiro>> ObterPorPeriodoAsync(int cdFilial, DateOnly inicio, DateOnly fim, CancellationToken ct = default) =>
         await ctx.Lancamentos
-            .Include(x => x.PlanoContas)
+            .Include(x => x.Conta)
             .Where(x => x.CdFilial == cdFilial
                      && x.DataLancamento >= inicio
                      && x.DataLancamento <= fim)

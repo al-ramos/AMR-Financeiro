@@ -17,7 +17,7 @@ public class GetLancamentosHandler(ILancamentoFinanceiroRepository repo)
 
     internal static LancamentoFinanceiroDto ToDto(LancamentoFinanceiro l) => new(
         l.Id, l.CdFilial,
-        l.PlanoContasId, l.PlanoContas?.Codigo ?? "", l.PlanoContas?.Descricao ?? "",
+        l.PlanoContasId, l.Conta?.Codigo ?? "", l.Conta?.Descricao ?? "",
         l.Tipo.ToString(), l.Origem.ToString(),
         l.Valor, l.DataLancamento, l.Historico,
         l.DocumentoOrigemId, l.CriadoEm);

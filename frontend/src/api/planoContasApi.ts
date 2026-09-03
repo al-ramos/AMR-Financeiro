@@ -5,7 +5,11 @@ export interface PlanoContasDto {
   cdFilial: number;
   codigo: string;
   descricao: string;
-  tipo: 'Sintetica' | 'Analitica';
+  tipo: TipoContaContabil;
+  natureza: NaturezaConta;
+  /** Na leitura a API expõe `grupoDRE`; no POST o campo é `grupoDre`. */
+  grupoDRE: GrupoDRE;
+  ordemExibicao: number;
   paiId: number | null;
   paiDescricao: string | null;
   nivel: number;
@@ -18,7 +22,9 @@ export interface PlanoContasArvoreDto {
   cdFilial: number;
   codigo: string;
   descricao: string;
-  tipo: 'Sintetica' | 'Analitica';
+  tipo: TipoContaContabil;
+  natureza: NaturezaConta;
+  grupoDRE: GrupoDRE;
   paiId: number | null;
   nivel: number;
   ativo: boolean;
@@ -26,12 +32,30 @@ export interface PlanoContasArvoreDto {
   filhos: PlanoContasArvoreDto[];
 }
 
+export type TipoContaContabil =
+  | 'Ativo' | 'Passivo'
+  | 'Receita' | 'Custo' | 'Despesa' | 'Imposto' | 'OutrasReceitas' | 'OutrasDespesas';
+
+export type NaturezaConta = 'Devedora' | 'Credora';
+
+export type GrupoDRE =
+  | 'NaoAplicavel' | 'ReceitaBruta' | 'DeducoesReceita' | 'ReceitaLiquida'
+  | 'CustoMercadorias' | 'LucroBruto' | 'DespesasOperacionais' | 'ResultadoOperacional'
+  | 'ReceitasFinanceiras' | 'DespesasFinanceiras' | 'ResultadoFinanceiro'
+  | 'ResultadoAntesIR' | 'ImpostosRenda' | 'LucroLiquido';
+
 export interface CriarPlanoContasPayload {
   cdFilial: number;
   codigo: string;
   descricao: string;
-  tipo: 'Sintetica' | 'Analitica';
+  tipo: TipoContaContabil;
+  natureza: NaturezaConta;
+  nivel: number;
   paiId: number | null;
+  grupoDre: GrupoDRE;
+  ordemExibicao: number;
+  /** Conta analítica: aceita lançamento direto. */
+  aceitaLancamentos: boolean;
 }
 
 // GET /api/planocontas/arvore?cdFilial=1

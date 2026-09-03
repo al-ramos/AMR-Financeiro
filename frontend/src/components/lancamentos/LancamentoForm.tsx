@@ -17,7 +17,7 @@ export function LancamentoForm({ contas, onSalvar, onCancelar, carregando }: Pro
   const [dataLancamento, setDataLancamento] = useState(today);
   const [historico, setHistorico]         = useState('');
 
-  const analiticas = contas.filter(c => c.tipo === 'Analitica' && c.ativo);
+  const analiticas = contas.filter(c => c.aceitaLancamentos && c.ativo);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

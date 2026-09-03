@@ -13,7 +13,7 @@ namespace AMR.Financeiro.Tests.Features.Lancamentos;
 public class CriarLancamentoHandlerTests
 {
     private readonly Mock<ILancamentoFinanceiroRepository> _repoMock = new();
-    private readonly Mock<IPlanoContasRepository> _planoMock = new();
+    private readonly Mock<IPlanoDeContasRepository> _planoMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
     private readonly Mock<IEventPublisher> _publisherMock = new();
 
@@ -37,8 +37,8 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_PlanoContasNaoEncontrado_LancaInvalidOperationException()
     {
-        _planoMock.Setup(r => r.ObterPorIdAsync(99, default))
-                  .ReturnsAsync((AMR.Financeiro.Domain.Entities.PlanoContas?)null);
+        _planoMock.Setup(r => r.GetByIdAsync(99, default))
+                  .ReturnsAsync((AMR.Financeiro.Domain.Entities.PlanoDeContas?)null);
 
         var cmd = new CriarLancamentoCommand(1, 99, TipoLancamento.Credito, 500m,
             new DateOnly(2026, 5, 1), "Historico");
@@ -50,8 +50,8 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_PlanoSintetico_LancaInvalidOperationException()
     {
-        var plano = new AMR.Financeiro.Domain.Entities.PlanoContas(1, "1", "Ativo", TipoContaPlano.Sintetica);
-        _planoMock.Setup(r => r.ObterPorIdAsync(1, default))
+        var plano = new AMR.Financeiro.Domain.Entities.PlanoDeContas(1, "1", "Ativo", TipoContaContabil.Ativo, NaturezaConta.Devedora, 1, null, GrupoDRE.NaoAplicavel, 1, aceitaLancamentos: false);
+        _planoMock.Setup(r => r.GetByIdAsync(1, default))
                   .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 1, TipoLancamento.Credito, 500m,
@@ -66,9 +66,9 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_PlanoInativo_LancaInvalidOperationException()
     {
-        var plano = new AMR.Financeiro.Domain.Entities.PlanoContas(1, "1.1.2", "Banco Inativo", TipoContaPlano.Analitica);
+        var plano = new AMR.Financeiro.Domain.Entities.PlanoDeContas(1, "1.1.2", "Banco Inativo", TipoContaContabil.Ativo, NaturezaConta.Devedora, 3, null, GrupoDRE.NaoAplicavel, 1, aceitaLancamentos: true);
         plano.Inativar();
-        _planoMock.Setup(r => r.ObterPorIdAsync(5, default))
+        _planoMock.Setup(r => r.GetByIdAsync(5, default))
                   .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 5, TipoLancamento.Credito, 500m,
@@ -83,8 +83,8 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_DadosValidos_AdicionaLancamentoESalva()
     {
-        var plano = new AMR.Financeiro.Domain.Entities.PlanoContas(1, "1.1.1", "Caixa", TipoContaPlano.Analitica);
-        _planoMock.Setup(r => r.ObterPorIdAsync(10, default))
+        var plano = new AMR.Financeiro.Domain.Entities.PlanoDeContas(1, "1.1.1", "Caixa", TipoContaContabil.Ativo, NaturezaConta.Devedora, 3, null, GrupoDRE.NaoAplicavel, 1, aceitaLancamentos: true);
+        _planoMock.Setup(r => r.GetByIdAsync(10, default))
                   .ReturnsAsync(plano);
 
         var cmd = new CriarLancamentoCommand(1, 10, TipoLancamento.Credito, 1500m,
@@ -99,8 +99,8 @@ public class CriarLancamentoHandlerTests
     [Fact]
     public async Task Handle_DadosValidos_OrigemEManual()
     {
-        var plano = new AMR.Financeiro.Domain.Entities.PlanoContas(1, "1.1.1", "Caixa", TipoContaPlano.Analitica);
-        _planoMock.Setup(r => r.ObterPorIdAsync(10, default))
+        var plano = new AMR.Financeiro.Domain.Entities.PlanoDeContas(1, "1.1.1", "Caixa", TipoContaContabil.Ativo, NaturezaConta.Devedora, 3, null, GrupoDRE.NaoAplicavel, 1, aceitaLancamentos: true);
+        _planoMock.Setup(r => r.GetByIdAsync(10, default))
                   .ReturnsAsync(plano);
 
         LancamentoFinanceiro? capturado = null;

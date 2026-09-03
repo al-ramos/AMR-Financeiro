@@ -70,7 +70,7 @@ public class ContaBancariaRepository(FinanceiroDbContext ctx) : IContaBancariaRe
 
     public async Task<List<LancamentoFinanceiro>> ObterExtratoAsync(int contaId, CancellationToken ct = default) =>
         await ctx.Lancamentos
-            .Include(x => x.PlanoContas)
+            .Include(x => x.Conta)
             .Where(x => x.ContaBancariaId == contaId)
             .OrderByDescending(x => x.DataLancamento)
             .ThenByDescending(x => x.Id)

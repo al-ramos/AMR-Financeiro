@@ -9,6 +9,7 @@ using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Interfaces;
 using AMR.Financeiro.Infrastructure;
 using AMR.Financeiro.Infrastructure.Data;
+using AMR.Financeiro.Infrastructure.Data.Seeders;
 using AMR.Financeiro.Shared.Security;
 using Serilog;
 
@@ -138,7 +139,8 @@ using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
     await ctx.Database.MigrateAsync();
-    await PlanoContasSeed.AplicarAsync(ctx, cdFilial: 1);
+    // Plano de contas unico (FIN-01): patrimoniais + resultado, idempotente por (CdFilial, Codigo).
+    await PlanoContasSeeder.SeedAsync(ctx, cdFilial: 1);
     await LancamentosDemoSeed.AplicarAsync(ctx, cdFilial: 1);
     await CentroCustoSeed.AplicarAsync(ctx, cdFilial: 1);
 

@@ -10,7 +10,7 @@ namespace AMR.Financeiro.Tests.Features.ContasPagar;
 public class PagarContaHandlerTests
 {
     private readonly Mock<IContaPagarRepository> _repoMock = new();
-    private readonly Mock<IPlanoContasRepository> _planoContasMock = new();
+    private readonly Mock<IPlanoDeContasRepository> _planoContasMock = new();
     private readonly Mock<ILancamentoFinanceiroRepository> _lancamentoMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
 

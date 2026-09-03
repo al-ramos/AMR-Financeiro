@@ -7,7 +7,7 @@ namespace AMR.Financeiro.Application.Features.ContasReceber.Handlers;
 
 public class ReceberContaHandler(
     IContaReceberRepository repo,
-    IPlanoContasRepository planoContasRepo,
+    IPlanoDeContasRepository planoContasRepo,
     ILancamentoFinanceiroRepository lancamentoRepo,
     IUnitOfWork uow)
     : IRequestHandler<ReceberContaCommand, bool>
@@ -24,7 +24,7 @@ public class ReceberContaHandler(
         repo.Atualizar(conta);
 
         // Registrar lançamento automático de crédito
-        var planoConta = await planoContasRepo.ObterPorCodigoAsync(conta.CdFilial, CodigoContasReceber, ct);
+        var planoConta = await planoContasRepo.GetByCodigoAsync(conta.CdFilial, CodigoContasReceber, ct);
         if (planoConta is not null)
         {
             var lancamento = LancamentoFinanceiro.DeRecebimento(

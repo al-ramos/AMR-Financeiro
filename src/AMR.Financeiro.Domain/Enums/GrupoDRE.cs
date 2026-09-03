@@ -6,6 +6,9 @@ namespace AMR.Financeiro.Domain.Enums;
 /// </summary>
 public enum GrupoDRE
 {
+    /// <summary>Conta patrimonial: existe no razao, mas nao entra em nenhuma linha da DRE.</summary>
+    NaoAplicavel,
+
     ReceitaBruta,
     DeducoesReceita,
     ReceitaLiquida,

@@ -33,7 +33,6 @@ public static class DependencyInjection
         services.AddScoped<IContaPagarRepository, ContaPagarRepository>();
         services.AddScoped<IContaReceberRepository, ContaReceberRepository>();
         services.AddScoped<ILancamentoFinanceiroRepository, LancamentoFinanceiroRepository>();
-        services.AddScoped<IPlanoContasRepository, PlanoContasRepository>();
         services.AddScoped<IPlanoDeContasRepository, PlanoDeContasRepository>();
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<INFeRepository, NFeRepository>();

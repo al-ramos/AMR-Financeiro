@@ -3,7 +3,7 @@ import {
   usePlanoContasArvore, usePlanoContasLista, useCriarPlanoContas,
   useAtualizarPlanoContas, useInativarPlanoContas, useAtivarPlanoContas,
 } from '../hooks/usePlanoContas';
-import type { PlanoContasDto } from '../api/planoContasApi';
+import type { CriarPlanoContasPayload, PlanoContasDto } from '../api/planoContasApi';
 import { PlanoContasLinha } from '../components/planoContas/PlanoContasLinha';
 import { PlanoContasForm } from '../components/planoContas/PlanoContasForm';
 import { Modal } from '../components/ui/Modal';
@@ -32,9 +32,7 @@ export function PlanoContasPage() {
   };
   const fecharModal = () => { setModalAberto(false); setContaEditando(null); setErroForm(null); };
 
-  const handleSalvar = async (dados: {
-    codigo: string; descricao: string; tipo: 'Sintetica' | 'Analitica'; paiId: number | null;
-  }) => {
+  const handleSalvar = async (dados: Omit<CriarPlanoContasPayload, 'cdFilial'>) => {
     setErroForm(null);
     try {
       if (contaEditando) {

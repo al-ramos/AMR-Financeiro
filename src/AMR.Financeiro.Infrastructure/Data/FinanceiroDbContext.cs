@@ -8,7 +8,6 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
 {
     public DbSet<ContaPagar> ContasPagar => Set<ContaPagar>();
     public DbSet<ContaReceber> ContasReceber => Set<ContaReceber>();
-    public DbSet<PlanoContas> PlanoContas => Set<PlanoContas>();
     public DbSet<PlanoDeContas> PlanoDeContas => Set<PlanoDeContas>();
     public DbSet<LancamentoFinanceiro> Lancamentos => Set<LancamentoFinanceiro>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
@@ -53,23 +52,8 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
         });
 
-        // PlanoContas
-        mb.Entity<PlanoContas>(e =>
-        {
-            e.ToTable("PlanoContas");
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).ValueGeneratedOnAdd();
-            e.Property(x => x.Codigo).HasMaxLength(20).IsRequired();
-            e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
-            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
-            e.HasIndex(x => new { x.CdFilial, x.Codigo }).IsUnique();
-            e.HasOne(x => x.Pai)
-             .WithMany(x => x.Filhos)
-             .HasForeignKey(x => x.PaiId)
-             .OnDelete(DeleteBehavior.Restrict);
-        });
 
-        // PlanoDeContas — plano gerencial hierárquico (5 níveis) com classificação DRE (Card 23.4)
+        // PlanoDeContas — plano de contas unico: razao + classificacao DRE (Card 23.4 / FIN-01)
         mb.Entity<PlanoDeContas>(e =>
         {
             e.ToTable("planodecontas");
@@ -98,8 +82,8 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.Valor).HasPrecision(18, 2);
             e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Origem).HasConversion<string>().HasMaxLength(20);
-            e.HasOne(x => x.PlanoContas)
-             .WithMany(x => x.Lancamentos)
+            e.HasOne(x => x.Conta)
+             .WithMany()
              .HasForeignKey(x => x.PlanoContasId)
              .OnDelete(DeleteBehavior.Restrict);
             // Card 23.6 — vínculo opcional com conta bancária (saldo/extrato multi-banco)
