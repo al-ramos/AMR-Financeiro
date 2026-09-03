@@ -17,9 +17,6 @@ public class CriarLancamentoHandler(
 {
     public async Task<int> Handle(CriarLancamentoCommand cmd, CancellationToken ct)
     {
-        if (cmd.Valor <= 0)
-            throw new InvalidOperationException("O valor do lancamento deve ser maior que zero.");
-
         var plano = await planoRepo.ObterPorIdAsync(cmd.PlanoContasId, ct)
             ?? throw new InvalidOperationException($"Plano de Contas Id {cmd.PlanoContasId} nao encontrado.");
 

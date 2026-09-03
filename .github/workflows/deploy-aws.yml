@@ -7,8 +7,8 @@ on:
 
 env:
   AWS_REGION:      sa-east-1
-  ECR_API_URL:     474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/api
-  ECR_WEB_URL:     474874558993.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/web
+  ECR_API_URL:     ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/api
+  ECR_WEB_URL:     ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.sa-east-1.amazonaws.com/amr-financeiro/web
   ECS_CLUSTER:     amr-system
   ECS_API_SERVICE: amr-financeiro-api
   ECS_WEB_SERVICE: amr-financeiro-web
@@ -21,6 +21,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Sem os tres segredos o job nao tem como autenticar. Falhar aqui, com a
+      # lista do que falta, evita um erro opaco lá na frente.
+      - name: Conferir segredos de deploy
+        id: segredos
+        env:
+          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          FALTA=""
+          if [ -z "$ACCOUNT_ID" ]; then FALTA="$FALTA AWS_ACCOUNT_ID"; fi
+          if [ -z "$KEY_ID" ]; then FALTA="$FALTA AWS_ACCESS_KEY_ID"; fi
+          if [ -z "$SECRET_KEY" ]; then FALTA="$FALTA AWS_SECRET_ACCESS_KEY"; fi
+          if [ -n "$FALTA" ]; then
+            echo "::error::Segredos ausentes no repositorio:$FALTA"
+            echo "Defina-os em Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "Segredos presentes."
+
       - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -28,10 +48,52 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
+      # O cluster e os servicos ECS podem simplesmente nao existir. Nesse caso o
+      # certo e nao construir imagem nenhuma e encerrar o job dizendo por que —
+      # em vez de quebrar no update-service e deixar main permanentemente vermelha
+      # por causa de infraestrutura ausente, nao de codigo defeituoso.
+      - name: Verificar infraestrutura ECS
+        id: infra
+        run: |
+          STATUS=$(aws ecs describe-clusters --clusters "$ECS_CLUSTER" --query "clusters[0].status" --output text 2>/dev/null || echo "NONE")
+
+          if [ "$STATUS" != "ACTIVE" ]; then
+            echo "infra_ok=false" >> "$GITHUB_OUTPUT"
+            echo "motivo=cluster ECS '$ECS_CLUSTER' nao existe (status: $STATUS)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ENCONTRADOS=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_API_SERVICE" "$ECS_WEB_SERVICE" --query "length(services[?status=='ACTIVE'])" --output text 2>/dev/null || echo "0")
+
+          if [ "$ENCONTRADOS" != "2" ]; then
+            echo "infra_ok=false" >> "$GITHUB_OUTPUT"
+            echo "motivo=cluster existe, mas $ENCONTRADOS de 2 servicos ativos ($ECS_API_SERVICE, $ECS_WEB_SERVICE)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "infra_ok=true" >> "$GITHUB_OUTPUT"
+          echo "Cluster e servicos ativos."
+
+      - name: Registrar que o deploy foi ignorado
+        if: steps.infra.outputs.infra_ok != 'true'
+        run: |
+          {
+            echo "## Deploy nao executado"
+            echo ""
+            echo "**Motivo:** ${{ steps.infra.outputs.motivo }}"
+            echo ""
+            echo "Nenhuma imagem foi construida ou publicada, e nenhum servico foi atualizado."
+            echo "Este job termina em verde porque nao ha defeito de codigo — falta infraestrutura."
+            echo "Enquanto o cluster nao existir, este modulo nao esta em producao."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::Deploy ignorado — ${{ steps.infra.outputs.motivo }}"
+
       - name: Login no ECR
+        if: steps.infra.outputs.infra_ok == 'true'
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build & Push API
+        if: steps.infra.outputs.infra_ok == 'true'
         run: |
           TAG=$(echo $GITHUB_SHA | cut -c1-7)
           docker build -t $ECR_API_URL:$TAG -t $ECR_API_URL:latest .
@@ -39,6 +101,7 @@ jobs:
           docker push $ECR_API_URL:latest
 
       - name: Build & Push Web
+        if: steps.infra.outputs.infra_ok == 'true'
         run: |
           TAG=$(echo $GITHUB_SHA | cut -c1-7)
           docker build -t $ECR_WEB_URL:$TAG -t $ECR_WEB_URL:latest ./frontend
@@ -46,21 +109,24 @@ jobs:
           docker push $ECR_WEB_URL:latest
 
       - name: Force new deployment
+        if: steps.infra.outputs.infra_ok == 'true'
         run: |
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_API_SERVICE --force-new-deployment --output text
           aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_WEB_SERVICE --force-new-deployment --output text
 
-      - name: Aguardar estabilização
+      - name: Aguardar estabilizacao
+        if: steps.infra.outputs.infra_ok == 'true'
         run: |
           aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_API_SERVICE
           aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_WEB_SERVICE
 
       - name: Health check
+        if: steps.infra.outputs.infra_ok == 'true'
         run: |
           for i in $(seq 1 18); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$ALB_URL" || echo "000")
             echo "Tentativa $i/18: HTTP $STATUS"
-            if [[ "$STATUS" == "200" ]]; then echo "✅ OK!"; exit 0; fi
+            if [[ "$STATUS" == "200" ]]; then echo "OK"; exit 0; fi
             sleep 10
           done
-          echo "❌ Health check falhou"; exit 1
+          echo "Health check falhou"; exit 1

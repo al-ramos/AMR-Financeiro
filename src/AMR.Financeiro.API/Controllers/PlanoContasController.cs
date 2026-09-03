@@ -9,6 +9,8 @@ namespace AMR.Financeiro.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class PlanoContasController(IMediator mediator) : ControllerBase
 {
     // GET api/planocontas?cdFilial=1
@@ -29,6 +31,7 @@ public class PlanoContasController(IMediator mediator) : ControllerBase
 
     // GET api/planocontas/5
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var result = await mediator.Send(new GetContaByIdQuery(id), ct);
@@ -36,24 +39,21 @@ public class PlanoContasController(IMediator mediator) : ControllerBase
     }
 
     // POST api/planocontas
+    // Codigo duplicado e hierarquia invalida chegam como InvalidOperationException
+    // e o ExceptionHandlingMiddleware as traduz em 422 — por isso nao ha try/catch aqui.
     [HttpPost]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CriarContaCommand cmd, CancellationToken ct)
     {
-        try
-        {
-            var id = await mediator.Send(cmd, ct);
-            return CreatedAtAction(nameof(GetById), new { id }, new { id });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { erro = ex.Message });
-        }
+        var id = await mediator.Send(cmd, ct);
+        return CreatedAtAction(nameof(GetById), new { id }, new { id });
     }
 
     // PUT api/planocontas/5
     // Atualiza apenas a descrição: GrupoDRE e OrdemExibicao são relidos da conta
     // atual para que a reclassificação contábil não seja sobrescrita por omissão.
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] AtualizarDescricaoRequest req, CancellationToken ct)
     {
         var atual = await mediator.Send(new GetContaByIdQuery(id), ct);
@@ -67,21 +67,17 @@ public class PlanoContasController(IMediator mediator) : ControllerBase
 
     // PATCH api/planocontas/5/inativar
     [HttpPatch("{id:int}/inativar")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Inativar(int id, CancellationToken ct)
     {
-        try
-        {
-            var ok = await mediator.Send(new InativarContaCommand(id), ct);
-            return ok ? NoContent() : NotFound();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { erro = ex.Message });
-        }
+        var ok = await mediator.Send(new InativarContaCommand(id), ct);
+        return ok ? NoContent() : NotFound();
     }
 
     // PATCH api/planocontas/5/ativar
     [HttpPatch("{id:int}/ativar")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Ativar(int id, CancellationToken ct)
     {
         var ok = await mediator.Send(new ReativarContaCommand(id), ct);

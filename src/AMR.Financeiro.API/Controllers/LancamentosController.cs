@@ -10,6 +10,8 @@ namespace AMR.Financeiro.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class LancamentosController(IMediator mediator) : ControllerBase
 {
     // GET api/lancamentos?cdFilial=1
@@ -22,6 +24,7 @@ public class LancamentosController(IMediator mediator) : ControllerBase
 
     // GET api/lancamentos/5
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var result = await mediator.Send(new GetLancamentoByIdQuery(id), ct);
@@ -67,16 +70,10 @@ public class LancamentosController(IMediator mediator) : ControllerBase
 
     // POST api/lancamentos
     [HttpPost]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create([FromBody] CriarLancamentoCommand cmd, CancellationToken ct)
     {
-        try
-        {
-            var id = await mediator.Send(cmd, ct);
-            return CreatedAtAction(nameof(GetById), new { id }, new { id });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { erro = ex.Message });
-        }
+        var id = await mediator.Send(cmd, ct);
+        return CreatedAtAction(nameof(GetById), new { id }, new { id });
     }
 }

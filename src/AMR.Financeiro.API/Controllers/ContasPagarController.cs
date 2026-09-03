@@ -10,6 +10,8 @@ namespace AMR.Financeiro.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class ContasPagarController(IMediator mediator) : ControllerBase
 {
     // GET api/contaspagar?cdFilial=1
@@ -22,6 +24,7 @@ public class ContasPagarController(IMediator mediator) : ControllerBase
 
     // GET api/contaspagar/5
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var result = await mediator.Send(new GetContaPagarByIdQuery(id), ct);
@@ -38,6 +41,7 @@ public class ContasPagarController(IMediator mediator) : ControllerBase
 
     // PATCH api/contaspagar/5/pagar
     [HttpPatch("{id:int}/pagar")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Pagar(int id, [FromBody] PagarContaRequest req, CancellationToken ct)
     {
         var ok = await mediator.Send(new PagarContaCommand(id, req.DataPagamento), ct);
@@ -46,6 +50,7 @@ public class ContasPagarController(IMediator mediator) : ControllerBase
 
     // PATCH api/contaspagar/5/cancelar
     [HttpPatch("{id:int}/cancelar")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancelar(int id, CancellationToken ct)
     {
         var ok = await mediator.Send(new CancelarContaCommand(id), ct);

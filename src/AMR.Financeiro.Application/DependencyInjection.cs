@@ -10,13 +10,17 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        {
+            cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
+
+            // Executa os validators FluentValidation no pipeline do MediatR.
+            // Registrado uma única vez: main e develop haviam adicionado o mesmo
+            // behavior por caminhos diferentes (cfg.AddBehavior e AddTransient),
+            // o que faria cada request ser validado duas vezes.
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
-
-        // Executa os validators FluentValidation no pipeline do MediatR (Cards 23.4/23.5)
-        // Requests sem validator passam direto — neutro para as demais features.
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         return services;
     }

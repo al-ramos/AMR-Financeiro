@@ -10,6 +10,8 @@ namespace AMR.Financeiro.API.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class ContasReceberController(IMediator mediator) : ControllerBase
 {
     // GET api/contasreceber?cdFilial=1
@@ -22,6 +24,7 @@ public class ContasReceberController(IMediator mediator) : ControllerBase
 
     // GET api/contasreceber/5
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var result = await mediator.Send(new GetContaReceberByIdQuery(id), ct);
@@ -38,6 +41,7 @@ public class ContasReceberController(IMediator mediator) : ControllerBase
 
     // PATCH api/contasreceber/5/receber
     [HttpPatch("{id:int}/receber")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Receber(int id, [FromBody] ReceberContaRequest req, CancellationToken ct)
     {
         var ok = await mediator.Send(new ReceberContaCommand(id, req.DataRecebimento, req.ValorRecebido), ct);
@@ -46,6 +50,7 @@ public class ContasReceberController(IMediator mediator) : ControllerBase
 
     // PATCH api/contasreceber/5/cancelar
     [HttpPatch("{id:int}/cancelar")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Cancelar(int id, CancellationToken ct)
     {
         var ok = await mediator.Send(new CancelarContaReceberCommand(id), ct);

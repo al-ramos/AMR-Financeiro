@@ -12,6 +12,8 @@ namespace AMR.Financeiro.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
 public class AuthController(IMediator mediator, IConfiguration config) : ControllerBase
 {
     /// <summary>
