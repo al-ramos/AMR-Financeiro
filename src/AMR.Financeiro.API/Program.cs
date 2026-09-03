@@ -117,10 +117,19 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ── CORS para o frontend ───────────────────────────────────────────────────────
+// As origens vem de Cors:AllowedOrigins, aceito como string unica ou array.
+// Estavam fixadas no codigo como quatro portas de localhost, o que bloqueava
+// o frontend em qualquer ambiente que nao fosse a maquina do desenvolvedor.
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Configuration["Cors:AllowedOrigins"] is { Length: > 0 } origemUnica
+        ? new[] { origemUnica }
+        : Array.Empty<string>());
+
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5180", "http://localhost:3001")
-     .AllowAnyHeader()
-     .AllowAnyMethod()));
+{
+    if (corsOrigins.Length > 0)
+        p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+}));
 
 var app = builder.Build();
 
@@ -188,6 +197,27 @@ app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+// Health checks — o target group do ALB precisa de um caminho que responda sem
+// depender de nada. /health e liveness pura (o processo subiu); /health/ready
+// verifica o banco, que e a unica dependencia externa da API hoje.
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }))
+   .ExcludeFromDescription();
+
+app.MapGet("/health/ready", async (IServiceProvider sp, CancellationToken ct) =>
+{
+    try
+    {
+        using var scope = sp.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
+        await db.Database.CanConnectAsync(ct);
+        return Results.Ok(new { status = "ready" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "degraded", detail = ex.Message }, statusCode: 503);
+    }
+}).ExcludeFromDescription();
+
 app.MapControllers();
 
 app.Run();

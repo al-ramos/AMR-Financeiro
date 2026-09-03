@@ -16,5 +16,34 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: amr_financeiro_api
+    ports:
+      - "5015:8080"
+    volumes:
+      - financeiro_data:/app/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/amr_v2.db
+      - Cors__AllowedOrigins=http://localhost:5180
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: amr_financeiro_web
+    ports:
+      - "5180:80"
+    depends_on:
+      - api
+
 volumes:
   rabbitmq_data:
+  financeiro_data:

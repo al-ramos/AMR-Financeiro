@@ -1,0 +1,9 @@
+# Dono padrao de todo o repositorio.
+# Sem esta declaracao nenhuma regra de revisao obrigatoria e aplicavel:
+# a protecao de branch consegue exigir aprovacao, mas nao sabe de quem pedir.
+*                       @al-ramos
+
+# Entrega e infraestrutura — mudanca aqui afeta o que vai para producao.
+/.github/workflows/     @al-ramos
+/Dockerfile             @al-ramos
+/docker-compose.yml     @al-ramos
