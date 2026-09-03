@@ -22,9 +22,10 @@ function LineChart({ dias }: { dias: FluxoCaixaDiaDto[] }) {
   const W = 700, H = 200, PAD = { top: 20, right: 20, bottom: 40, left: 60 };
   const inner = { w: W - PAD.left - PAD.right, h: H - PAD.top - PAD.bottom };
 
-  // Saldo acumulado
-  let acc = 0;
-  const pontos = dias.map(d => { acc += d.saldo; return acc; });
+  // Saldo acumulado sem acumulador mutavel: cada ponto e a soma dos saldos ate ele.
+  const pontos = dias.reduce<number[]>(
+    (acc, d) => [...acc, (acc[acc.length - 1] ?? 0) + d.saldo],
+    []);
   const mn = Math.min(0, ...pontos);
   const mx = Math.max(0, ...pontos);
   const range = mx - mn || 1;
