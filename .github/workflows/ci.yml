@@ -1,4 +1,4 @@
-name: CI
+name: CI — AMR Financeiro
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build-backend:
+    name: Build & Test .NET
     runs-on: ubuntu-latest
 
     steps:
@@ -18,45 +18,36 @@ jobs:
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.x'
 
-      - name: Restore dependencies
-        run: dotnet restore AMR.Financeiro.slnx
+      - name: Restore
+        run: dotnet restore src/AMR.Financeiro.API/AMR.Financeiro.API.csproj
 
-      - name: Build (no warnings as errors)
-        run: dotnet build AMR.Financeiro.slnx --no-restore --configuration Release
+      - name: Build
+        run: dotnet build src/AMR.Financeiro.API/AMR.Financeiro.API.csproj --no-restore --configuration Release
 
-      - name: Run unit tests + coverage
-        run: |
-          dotnet test AMR.Financeiro.slnx \
-            --no-build \
-            --configuration Release \
-            --verbosity normal \
-            --settings coverlet.runsettings \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults
+      - name: Test
+        run: dotnet test tests/AMR.Financeiro.Tests/AMR.Financeiro.Tests.csproj --configuration Release --verbosity normal
 
-      # Instala reportgenerator para gerar resumo legível
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
 
-      # Gera resumo de cobertura no GitHub Actions Job Summary
-      - name: Generate coverage summary
-        if: always()
-        run: |
-          reportgenerator \
-            -reports:"./TestResults/**/coverage.cobertura.xml" \
-            -targetdir:"./TestResults/CoverageReport" \
-            -reporttypes:"MarkdownSummaryGithub;Cobertura" \
-            -verbosity:Warning
-          cat ./TestResults/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: coverage
-          path: |
-            **/TestResults/**/coverage.cobertura.xml
-            TestResults/CoverageReport/
-          retention-days: 14
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build (TypeScript + Vite)
+        working-directory: frontend
+        run: npm run build

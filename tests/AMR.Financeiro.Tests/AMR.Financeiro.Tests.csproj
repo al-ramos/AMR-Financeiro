@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AMR.Financeiro.Application\AMR.Financeiro.Application.csproj" />
     <ProjectReference Include="..\..\src\AMR.Financeiro.Domain\AMR.Financeiro.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AMR.Financeiro.Infrastructure\AMR.Financeiro.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

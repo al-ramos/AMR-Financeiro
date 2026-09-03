@@ -20,6 +20,12 @@ public class LancamentoFinanceiro
     /// <summary>Referência ao documento de origem (ContaPagar.Id ou ContaReceber.Id)</summary>
     public int? DocumentoOrigemId { get; private set; }
 
+    /// <summary>Conta bancária por onde o valor transitou — base do saldo/extrato multi-banco (Card 23.6).</summary>
+    public int? ContaBancariaId { get; private set; }
+
+    /// <summary>Centro de custo ao qual o lançamento é atribuído — base do realizado por CC (Card 23.5).</summary>
+    public int? CentroCustoId { get; private set; }
+
     public DateTime CriadoEm { get; private set; } = DateTime.UtcNow;
 
     protected LancamentoFinanceiro() { }
@@ -42,6 +48,22 @@ public class LancamentoFinanceiro
         DataLancamento = dataLancamento;
         Historico = historico;
         DocumentoOrigemId = documentoOrigemId;
+    }
+
+    /// <summary>Vincula o lançamento a uma conta bancária (passa a compor saldo e extrato da conta).</summary>
+    public void VincularContaBancaria(int contaBancariaId)
+    {
+        if (contaBancariaId <= 0)
+            throw new ArgumentException("ContaBancariaId inválido.", nameof(contaBancariaId));
+        ContaBancariaId = contaBancariaId;
+    }
+
+    /// <summary>Vincula o lançamento a um centro de custo (passa a compor o realizado do CC — Card 23.5).</summary>
+    public void VincularCentroCusto(int centroCustoId)
+    {
+        if (centroCustoId <= 0)
+            throw new ArgumentException("CentroCustoId inválido.", nameof(centroCustoId));
+        CentroCustoId = centroCustoId;
     }
 
     /// <summary>Atalho para lançamento de pagamento de CP.</summary>
