@@ -1,20 +1,7 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { login as apiLogin, type LoginRequest, type TokenResponse } from '../api/authApi';
-
-interface AuthState {
-  token: string | null;
-  username: string | null;
-  role: string | null;
-}
-
-interface AuthContextType extends AuthState {
-  isAuthenticated: boolean;
-  login: (data: LoginRequest) => Promise<void>;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext, type AuthState } from './auth-context';
 
 const TOKEN_KEY = 'amr_fin_token';
 const USER_KEY  = 'amr_fin_user';
@@ -49,10 +36,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextType {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth deve ser usado dentro de AuthProvider');
-  return ctx;
 }

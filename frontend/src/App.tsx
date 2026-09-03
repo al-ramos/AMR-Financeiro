@@ -12,7 +12,8 @@ import { FluxoCaixaPage } from './pages/FluxoCaixaPage';
 import { DREPage } from './pages/DREPage';
 import { CentrosCustoPage } from './pages/CentrosCustoPage';
 import { CentroCustoDetalhePage } from './pages/CentroCustoDetalhePage';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './hooks/useAuth';
 
 const NAV = [
   {
@@ -138,15 +139,6 @@ function Topbar() {
   );
 }
 
-function EmConstrucao({ titulo }: { titulo: string }) {
-  return (
-    <div className="amr-empty">
-      <i className="bi bi-tools"></i>
-      <div style={{ fontSize: 15, fontWeight: 600, color: '#495057' }}>{titulo}</div>
-      <div style={{ fontSize: 13, marginTop: 4 }}>Em desenvolvimento · Sprint 3</div>
-    </div>
-  );
-}
 
 // ── Layout autenticado ─────────────────────────────────────────────────────────
 function AppLayout() {
