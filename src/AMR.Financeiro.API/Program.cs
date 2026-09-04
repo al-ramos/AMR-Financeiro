@@ -139,10 +139,19 @@ using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<FinanceiroDbContext>();
     await ctx.Database.MigrateAsync();
-    // Plano de contas unico (FIN-01): patrimoniais + resultado, idempotente por (CdFilial, Codigo).
+    // Referencia — estrutura que qualquer instalacao precisa ter, sem descrever ninguem:
+    // o plano de contas padrao (FIN-01) e os centros de custo genericos.
     await PlanoContasSeeder.SeedAsync(ctx, cdFilial: 1);
-    await LancamentosDemoSeed.AplicarAsync(ctx, cdFilial: 1);
     await CentroCustoSeed.AplicarAsync(ctx, cdFilial: 1);
+
+    // Demonstracao — tres meses de lancamentos ficticios. Sem este gate, a DRE de
+    // producao exibia resultado inventado como se fosse apuracao real. Ver SEED-01.
+    if (app.Configuration.GetValue<bool>("Seed:DadosDemo"))
+    {
+        await LancamentosDemoSeed.AplicarAsync(ctx, cdFilial: 1);
+        app.Logger.LogWarning(
+            "Seed:DadosDemo ligado — a base foi populada com lancamentos de demonstracao.");
+    }
 
     // Cria usuário admin padrão se não existir — SQL direto para evitar EF Core 9 + SQLite sentinel bug
     var adminExists = await ctx.Usuarios.AnyAsync(u => u.Username == "admin");
