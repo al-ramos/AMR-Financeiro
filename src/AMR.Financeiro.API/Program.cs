@@ -153,30 +153,68 @@ using (var scope = app.Services.CreateScope())
             "Seed:DadosDemo ligado — a base foi populada com lancamentos de demonstracao.");
     }
 
-    // Cria usuário admin padrão se não existir — SQL direto para evitar EF Core 9 + SQLite sentinel bug
+    // Usuario admin inicial. Ate 04/09/2026 ele era criado em qualquer ambiente com a
+    // senha fixa "admin123", e a senha ia para o log — o unico modulo do AMR que
+    // autentica nascia com credencial conhecida e registrada. Ver AUTH-02.
+    //
+    // Agora a senha tem de vir de Seed:AdminSenhaInicial. Em Development, e so ali,
+    // ha um default para o `dotnet run` continuar funcionando num clone limpo.
     var adminExists = await ctx.Usuarios.AnyAsync(u => u.Username == "admin");
     if (!adminExists)
     {
-        var hash = PasswordHelper.Hash("admin123");
-        var now  = DateTime.UtcNow.ToString("o");
-        await ctx.Database.ExecuteSqlRawAsync($@"
-            INSERT INTO ""Usuarios"" (""Username"", ""PasswordHash"", ""Role"", ""CriadoEm"")
-            VALUES ('admin', '{hash}', 'Admin', '{now}')
-        ");
-        app.Logger.LogInformation("Usuário admin criado com senha padrão: admin123");
+        var senhaInicial = app.Configuration["Seed:AdminSenhaInicial"];
+        var usandoDefaultDeDesenvolvimento = false;
+
+        if (string.IsNullOrWhiteSpace(senhaInicial) && app.Environment.IsDevelopment())
+        {
+            senhaInicial = "admin123";
+            usandoDefaultDeDesenvolvimento = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(senhaInicial))
+        {
+            // Nao inventar credencial. A base fica sem usuario e o operador e avisado
+            // de como criar o primeiro — melhor do que subir com uma senha publica.
+            app.Logger.LogWarning(
+                "Nenhum usuario cadastrado e Seed:AdminSenhaInicial nao foi definida. " +
+                "Defina a variavel de ambiente Seed__AdminSenhaInicial e reinicie para criar o usuario 'admin'.");
+        }
+        else
+        {
+            // SQL direto para contornar o comportamento do EF Core 9 + SQLite com sentinel,
+            // mas parametrizado: o hash nao entra concatenado na instrucao.
+            await ctx.Database.ExecuteSqlInterpolatedAsync($@"
+                INSERT INTO ""Usuarios"" (""Username"", ""PasswordHash"", ""Role"", ""CriadoEm"")
+                VALUES ('admin', {PasswordHelper.Hash(senhaInicial)}, 'Admin', {DateTime.UtcNow.ToString("o")})
+            ");
+
+            if (usandoDefaultDeDesenvolvimento)
+                app.Logger.LogWarning(
+                    "Usuario 'admin' criado com a senha padrao de desenvolvimento. " +
+                    "Fora de Development a senha vem de Seed:AdminSenhaInicial.");
+            else
+                app.Logger.LogInformation(
+                    "Usuario 'admin' criado com a senha definida em Seed:AdminSenhaInicial.");
+        }
     }
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Swagger habilitado em todos os ambientes (projeto interno)
+// Swagger fica em Development e, fora dele, so quando Swagger:Habilitado for ligado
+// deliberadamente. Estava aberto em todo ambiente com a justificativa de "projeto
+// interno" — o que publicava o mapa completo da API para quem alcancasse o ALB.
+// Ver EXP-01.
 // RoutePrefix = "api/swagger" para funcionar atrás do ALB (que roteia /api/* para este container)
-app.UseSwagger(c => c.RouteTemplate = "api/swagger/{documentName}/swagger.json");
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Habilitado"))
 {
-    c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AMR.Financeiro API v1");
-    c.RoutePrefix = "api/swagger";
-});
+    app.UseSwagger(c => c.RouteTemplate = "api/swagger/{documentName}/swagger.json");
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AMR.Financeiro API v1");
+        c.RoutePrefix = "api/swagger";
+    });
+}
 
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
