@@ -4,8 +4,11 @@ namespace AMR.Financeiro.Domain.Entities;
 
 /// <summary>
 /// Regra de rateio de custos entre centros de custo (Card 23.5).
-/// A conta de origem é referenciada pela descrição (sem FK) — a integração
-/// com lançamentos reais está planejada para o Sprint 25.
+///
+/// A conta de origem é referenciada por <see cref="ContaOrigemId"/>, uma FK para o
+/// plano de contas. Antes era só uma descrição solta, e o serviço de rateio, sem ter
+/// como encontrar a conta, distribuía um valor fixo de R$ 1.000 — que era persistido
+/// e entrava na DRE e no orçamento como se fosse apuração. Ver FIN-02.
 /// </summary>
 public class RegraRateio
 {
@@ -13,7 +16,11 @@ public class RegraRateio
     public int CdFilial { get; private set; }
     public string Nome { get; private set; } = string.Empty;
 
-    /// <summary>Descrição da conta de origem cujos valores serão rateados.</summary>
+    /// <summary>Conta do plano cujos lançamentos do mês são o valor a ratear.</summary>
+    public int ContaOrigemId { get; private set; }
+    public PlanoDeContas ContaOrigem { get; private set; } = null!;
+
+    /// <summary>Rótulo da conta de origem, para exibição. O valor vem de <see cref="ContaOrigemId"/>.</summary>
     public string ContaOrigemDescricao { get; private set; } = string.Empty;
 
     public TipoBaseRateio TipoBase { get; private set; }
@@ -25,10 +32,14 @@ public class RegraRateio
 
     protected RegraRateio() { }
 
-    public RegraRateio(int cdFilial, string nome, string contaOrigemDescricao, TipoBaseRateio tipoBase)
+    public RegraRateio(int cdFilial, string nome, int contaOrigemId, string contaOrigemDescricao, TipoBaseRateio tipoBase)
     {
+        if (contaOrigemId <= 0)
+            throw new ArgumentException("A regra precisa de uma conta de origem.", nameof(contaOrigemId));
+
         CdFilial = cdFilial;
         Nome = nome;
+        ContaOrigemId = contaOrigemId;
         ContaOrigemDescricao = contaOrigemDescricao;
         TipoBase = tipoBase;
     }

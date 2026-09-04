@@ -60,9 +60,8 @@ public class CriarRegraRateioCommandValidator : AbstractValidator<CriarRegraRate
             .NotEmpty().WithMessage("Nome da regra é obrigatório.")
             .MaximumLength(150);
 
-        RuleFor(c => c.ContaOrigemDescricao)
-            .NotEmpty().WithMessage("Conta de origem é obrigatória.")
-            .MaximumLength(200);
+        RuleFor(c => c.ContaOrigemId)
+            .GreaterThan(0).WithMessage("Conta de origem é obrigatória.");
 
         RuleFor(c => c.Destinos)
             .NotEmpty().WithMessage("A regra de rateio deve ter pelo menos um destino.");

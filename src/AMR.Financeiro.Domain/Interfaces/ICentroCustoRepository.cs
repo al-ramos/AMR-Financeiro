@@ -24,4 +24,11 @@ public interface ICentroCustoRepository
     Task<List<LancamentoFinanceiro>> GetLancamentosPorCentroCustoAsync(int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default);
     Task<List<RateioRealizado>> GetRateiosPorCentroCustoAsync(int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default);
     Task<List<RegraRateio>> GetRegrasPorIdsAsync(List<int> ids, CancellationToken ct = default);
+
+    /// <summary>
+    /// Total apurado na conta de origem dentro da competência — a base do rateio.
+    /// Segue a natureza da conta: devedora soma débitos menos créditos, credora o inverso.
+    /// Devolve null quando a conta não existe.
+    /// </summary>
+    Task<decimal?> ObterTotalDaContaAsync(int cdFilial, int contaOrigemId, DateOnly competencia, CancellationToken ct = default);
 }

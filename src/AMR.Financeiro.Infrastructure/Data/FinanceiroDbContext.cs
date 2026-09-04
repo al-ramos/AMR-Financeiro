@@ -266,6 +266,11 @@ public class FinanceiroDbContext(DbContextOptions<FinanceiroDbContext> options) 
             e.Property(x => x.Id).ValueGeneratedOnAdd();
             e.Property(x => x.Nome).HasMaxLength(150).IsRequired();
             e.Property(x => x.ContaOrigemDescricao).HasMaxLength(200).IsRequired();
+            // FIN-02 — a conta de origem passa a ser FK, nao mais so um rotulo.
+            e.HasOne(x => x.ContaOrigem)
+             .WithMany()
+             .HasForeignKey(x => x.ContaOrigemId)
+             .OnDelete(DeleteBehavior.Restrict);
             e.Property(x => x.TipoBase).HasConversion<string>().HasMaxLength(20);
             e.HasMany(x => x.Destinos)
              .WithOne()

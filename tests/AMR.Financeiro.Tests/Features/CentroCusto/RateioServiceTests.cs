@@ -8,22 +8,31 @@ namespace AMR.Financeiro.Tests.Features.CentroCusto;
 
 /// <summary>
 /// Testes do algoritmo de rateio (Card 23.5).
-/// O RateioService usa valor de referência fixo (1000) por regra até a
-/// integração com lançamentos reais (Sprint 25).
+///
+/// O valor rateado sai dos lançamentos da conta de origem na competência — aqui
+/// `ObterTotalDaContaAsync` é mockado. Antes o serviço usava R$ 1.000 fixos, e estes
+/// testes afirmavam esse valor: eles codificavam o defeito em vez de pegá-lo. Ver FIN-02.
 /// </summary>
 public class RateioServiceTests
 {
-    private const decimal ValorReferencia = 1000m;
+    /// <summary>Total apurado na conta de origem — o que o repositório devolve.</summary>
+    private const decimal TotalDaConta = 1000m;
+    private const int ContaOrigemId = 42;
     private static readonly DateOnly Competencia = new(2026, 7, 1);
 
     private readonly Mock<ICentroCustoRepository> _repoMock = new();
 
-    private RateioService CreateService() => new(_repoMock.Object);
+    private RateioService CreateService(decimal? total = TotalDaConta)
+    {
+        _repoMock.Setup(r => r.ObterTotalDaContaAsync(1, ContaOrigemId, Competencia, default))
+                 .ReturnsAsync(total);
+        return new(_repoMock.Object);
+    }
 
     private static RegraRateio CriarRegra(TipoBaseRateio tipoBase,
         params (int ccId, decimal percentual, decimal? valorBase)[] destinos)
     {
-        var regra = new RegraRateio(1, "Regra Teste", "Despesa Teste", tipoBase);
+        var regra = new RegraRateio(1, "Regra Teste", ContaOrigemId, "5.2.2 - Aluguel", tipoBase);
         foreach (var (ccId, percentual, valorBase) in destinos)
             regra.Destinos.Add(new RegraRateioDestino(0, ccId, percentual, valorBase));
         return regra;
@@ -71,7 +80,7 @@ public class RateioServiceTests
 
         Assert.Equal(1, result.TotalRegras);
         Assert.Equal(2, result.TotalRateios);
-        Assert.Equal(ValorReferencia, result.ValorTotalRateado);
+        Assert.Equal(TotalDaConta, result.ValorTotalRateado);
         Assert.Empty(result.Erros);
 
         Assert.NotNull(capturados);
@@ -99,7 +108,7 @@ public class RateioServiceTests
         var result = await CreateService().ExecutarMesAsync(1, Competencia);
 
         Assert.Equal(2, result.TotalRateios);
-        Assert.Equal(ValorReferencia, result.ValorTotalRateado);
+        Assert.Equal(TotalDaConta, result.ValorTotalRateado);
 
         var cc10 = capturados!.Single(r => r.CentroCustoId == 10);
         var cc20 = capturados.Single(r => r.CentroCustoId == 20);
@@ -128,10 +137,55 @@ public class RateioServiceTests
     }
 
     [Fact]
-    public async Task ExecutarMes_BaseDinamicaSemValorBase_UsaPercentuaisFixosComoFallback()
+    public async Task ExecutarMes_BaseDinamicaSemValorBase_NaoRateiaERegistraErro()
     {
-        // Base dinâmica sem ValorBase informado (totalBase = 0) → usa os percentuais fixos
+        // Base dinamica sem ValorBase nao tem como ser proporcional. Antes caia nos
+        // percentuais fixos em silencio, aplicando um criterio diferente do da regra.
         var regra = CriarRegra(TipoBaseRateio.AreaM2, (10, 50m, null), (20, 50m, null));
+        _repoMock.Setup(r => r.GetRegrasAtivasAsync(1, default)).ReturnsAsync([regra]);
+
+        var result = await CreateService().ExecutarMesAsync(1, Competencia);
+
+        Assert.Equal(0, result.TotalRateios);
+        Assert.Equal(0m, result.ValorTotalRateado);
+        Assert.Single(result.Erros);
+        Assert.Contains("sem ValorBase", result.Erros[0]);
+        _repoMock.Verify(r => r.AddRateiosAsync(It.IsAny<List<RateioRealizado>>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecutarMes_ContaSemLancamentoNoMes_NaoRateiaERegistraErro()
+    {
+        var regra = CriarRegra(TipoBaseRateio.FixoPercentual, (10, 100m, null));
+        _repoMock.Setup(r => r.GetRegrasAtivasAsync(1, default)).ReturnsAsync([regra]);
+
+        var result = await CreateService(total: 0m).ExecutarMesAsync(1, Competencia);
+
+        Assert.Equal(0, result.TotalRateios);
+        Assert.Single(result.Erros);
+        Assert.Contains("nao teve lancamento", result.Erros[0]);
+        _repoMock.Verify(r => r.AddRateiosAsync(It.IsAny<List<RateioRealizado>>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecutarMes_ContaOrigemInexistente_NaoRateiaERegistraErro()
+    {
+        var regra = CriarRegra(TipoBaseRateio.FixoPercentual, (10, 100m, null));
+        _repoMock.Setup(r => r.GetRegrasAtivasAsync(1, default)).ReturnsAsync([regra]);
+
+        var result = await CreateService(total: null).ExecutarMesAsync(1, Competencia);
+
+        Assert.Equal(0, result.TotalRateios);
+        Assert.Single(result.Erros);
+        Assert.Contains("nao encontrada", result.Erros[0]);
+        _repoMock.Verify(r => r.AddRateiosAsync(It.IsAny<List<RateioRealizado>>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecutarMes_TotalApuradoMuda_ValorRateadoAcompanha()
+    {
+        // O ponto do FIN-02: o resultado segue a apuracao, nao uma constante.
+        var regra = CriarRegra(TipoBaseRateio.FixoPercentual, (10, 100m, null));
         _repoMock.Setup(r => r.GetRegrasAtivasAsync(1, default)).ReturnsAsync([regra]);
 
         List<RateioRealizado>? capturados = null;
@@ -139,10 +193,9 @@ public class RateioServiceTests
                  .Callback<List<RateioRealizado>, CancellationToken>((l, _) => capturados = l)
                  .Returns(Task.CompletedTask);
 
-        await CreateService().ExecutarMesAsync(1, Competencia);
+        await CreateService(total: 7350.45m).ExecutarMesAsync(1, Competencia);
 
-        Assert.Equal(500m, capturados!.Single(r => r.CentroCustoId == 10).ValorRateado);
-        Assert.Equal(500m, capturados.Single(r => r.CentroCustoId == 20).ValorRateado);
+        Assert.Equal(7350.45m, capturados!.Single(r => r.CentroCustoId == 10).ValorRateado);
     }
 
     [Fact]
@@ -156,7 +209,7 @@ public class RateioServiceTests
 
         Assert.Equal(2, result.TotalRegras);
         Assert.Equal(3, result.TotalRateios);
-        Assert.Equal(2 * ValorReferencia, result.ValorTotalRateado);
+        Assert.Equal(2 * TotalDaConta, result.ValorTotalRateado);
         _repoMock.Verify(r => r.AddRateiosAsync(
             It.Is<List<RateioRealizado>>(l => l.Count == 3), default), Times.Once);
     }

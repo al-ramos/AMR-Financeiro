@@ -1,3 +1,4 @@
+using AMR.Financeiro.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Interfaces;
@@ -120,4 +121,35 @@ public class CentroCustoRepository(FinanceiroDbContext ctx) : ICentroCustoReposi
                orderby o.Ano, o.Mes
                select o)
             .ToListAsync(ct);
+
+    // FIN-02 — a base do rateio deixa de ser um valor fixo e passa a sair dos
+    // lancamentos da conta de origem na competencia. Mesma convencao da DRE:
+    // conta devedora acumula debitos menos creditos, credora o inverso.
+    public async Task<decimal?> ObterTotalDaContaAsync(
+        int cdFilial, int contaOrigemId, DateOnly competencia, CancellationToken ct = default)
+    {
+        var conta = await ctx.PlanoDeContas.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == contaOrigemId && c.CdFilial == cdFilial, ct);
+
+        if (conta is null) return null;
+
+        var inicio = new DateOnly(competencia.Year, competencia.Month, 1);
+        var fim = inicio.AddMonths(1).AddDays(-1);
+
+        var somas = await ctx.Lancamentos.AsNoTracking()
+            .Where(l => l.CdFilial == cdFilial
+                     && l.PlanoContasId == contaOrigemId
+                     && l.DataLancamento >= inicio
+                     && l.DataLancamento <= fim)
+            .GroupBy(l => l.Tipo)
+            .Select(g => new { Tipo = g.Key, Total = g.Sum(x => x.Valor) })
+            .ToListAsync(ct);
+
+        var creditos = somas.Where(x => x.Tipo == TipoLancamento.Credito).Sum(x => x.Total);
+        var debitos = somas.Where(x => x.Tipo == TipoLancamento.Debito).Sum(x => x.Total);
+
+        return conta.Natureza == NaturezaConta.Credora
+            ? creditos - debitos
+            : debitos - creditos;
+    }
 }
