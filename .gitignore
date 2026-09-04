@@ -15,6 +15,9 @@
 *.env.local
 appsettings.Development.json
 appsettings.*.json
+# ...menos o de desenvolvimento: nao tem segredo nenhum e e o que faz
+# `dotnet run` funcionar num clone limpo (CORS local, banco local, Seed:DadosDemo).
+!appsettings.Development.json
 
 # Terraform secrets
 terraform.tfvars

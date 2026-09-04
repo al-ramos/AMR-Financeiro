@@ -5,6 +5,11 @@ namespace AMR.Financeiro.Infrastructure.Data;
 /// <summary>
 /// Seed de lançamentos demo para o AMR-Financeiro.
 /// Gera movimentos dos últimos 3 meses para popular o Dashboard e os relatórios.
+///
+/// É demonstração: só roda com Seed:DadosDemo ligado. Antes rodava em qualquer
+/// ambiente, e a DRE de produção exibia três meses de resultado inventado como se
+/// fosse apuração real. Ver SEED-01.
+///
 /// Idempotente — só insere se não houver lançamentos para a filial.
 /// </summary>
 public static class LancamentosDemoSeed
