@@ -9,6 +9,11 @@ namespace AMR.Financeiro.Infrastructure.Services;
 /// Executa o rateio automático mensal entre centros de custo (Card 23.5).
 /// Bases suportadas: percentual fixo, área (m²) e headcount — para bases
 /// dinâmicas o percentual é recalculado proporcionalmente ao ValorBase de cada destino.
+///
+/// O valor rateado sai dos lançamentos da conta de origem na competência. Uma regra
+/// cuja conta não existe, não teve movimento, ou cuja base dinâmica está sem valor,
+/// entra na lista de erros do resultado e não gera rateio — em vez de gerar zero,
+/// que o centro de custo exibiria como apuração. Ver FIN-02.
 /// </summary>
 public class RateioService(ICentroCustoRepository repo) : IRateioService
 {
@@ -26,33 +31,57 @@ public class RateioService(ICentroCustoRepository repo) : IRateioService
         {
             try
             {
-                // Busca total: apenas simula um valor proporcional ao mês
-                // (sem tabela de lançamentos por CC ainda — será integrado no Sprint 25)
-                // Usa valor fixo de referência = 1000 para demonstrar o rateio funcional
-                decimal totalConta = 1000m; // TODO: integrar com lançamentos reais via ContaOrigemDescricao
+                // O valor a ratear e o que a conta de origem acumulou na competencia.
+                // Antes era `decimal totalConta = 1000m`, fixo, e o resultado era
+                // persistido em RateioRealizado — alimentando DRE e orcamento com um
+                // numero que ninguem apurou. Ver FIN-02.
+                var total = await repo.ObterTotalDaContaAsync(cdFilial, regra.ContaOrigemId, competencia, ct);
 
+                if (total is null)
+                {
+                    erros.Add($"Regra '{regra.Nome}': conta de origem {regra.ContaOrigemId} nao encontrada na filial {cdFilial}.");
+                    continue;
+                }
+
+                // Sem movimento na conta nao ha o que ratear. Registrar zero seria pior
+                // que nao registrar: o centro de custo passaria a exibir uma apuracao
+                // que nunca aconteceu.
+                if (total.Value == 0)
+                {
+                    erros.Add($"Regra '{regra.Nome}': a conta '{regra.ContaOrigemDescricao}' nao teve lancamento em {competencia:MM/yyyy} — nada rateado.");
+                    continue;
+                }
+
+                var totalConta = total.Value;
                 var destinos = regra.Destinos.ToList();
 
                 // Recalcula % para base dinâmica
                 if (regra.TipoBase != TipoBaseRateio.FixoPercentual)
                 {
                     decimal totalBase = destinos.Sum(d => d.ValorBase ?? 0);
-                    if (totalBase > 0)
-                    {
-                        // Criar novos objetos percentuais calculados inline (não muta entidade)
-                        var percentuaisCalculados = destinos.Select(d =>
-                            (destino: d, pct: totalBase > 0 ? (d.ValorBase ?? 0) / totalBase * 100 : d.Percentual))
-                            .ToList();
 
-                        foreach (var (destino, pct) in percentuaisCalculados)
-                        {
-                            var valorRateado = totalConta * (pct / 100);
-                            todosRateios.Add(new RateioRealizado(regra.Id, destino.CentroCustoId,
-                                valorRateado, pct, competencia));
-                            valorTotalRateado += valorRateado;
-                        }
+                    // Base dinamica (area, headcount) sem valor informado nao tem como
+                    // ser proporcional. Cair no percentual fixo aqui seria silenciosamente
+                    // usar outro criterio que o da regra.
+                    if (totalBase <= 0)
+                    {
+                        erros.Add($"Regra '{regra.Nome}': base {regra.TipoBase} sem ValorBase nos destinos — nada rateado.");
                         continue;
                     }
+
+                    // Percentuais calculados fora da entidade — a regra não é mutada.
+                    var percentuaisCalculados = destinos
+                        .Select(d => (destino: d, pct: (d.ValorBase ?? 0) / totalBase * 100))
+                        .ToList();
+
+                    foreach (var (destino, pct) in percentuaisCalculados)
+                    {
+                        var valorRateado = totalConta * (pct / 100);
+                        todosRateios.Add(new RateioRealizado(regra.Id, destino.CentroCustoId,
+                            valorRateado, pct, competencia));
+                        valorTotalRateado += valorRateado;
+                    }
+                    continue;
                 }
 
                 foreach (var destino in destinos)

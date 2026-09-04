@@ -65,7 +65,7 @@ public class CentroCustoValidatorsTests
     [Fact]
     public void CriarRegraRateio_PercentualFixoSomando100_EhValido()
     {
-        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", "Despesa Aluguel",
+        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", 42,
             TipoBaseRateio.FixoPercentual,
             [new RegraDestinoDto(10, 60m, null), new RegraDestinoDto(20, 40m, null)]);
 
@@ -75,7 +75,7 @@ public class CentroCustoValidatorsTests
     [Fact]
     public void CriarRegraRateio_SomaPercentualDiferenteDe100_EhInvalido()
     {
-        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", "Despesa Aluguel",
+        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", 42,
             TipoBaseRateio.FixoPercentual,
             [new RegraDestinoDto(10, 60m, null), new RegraDestinoDto(20, 30m, null)]);
 
@@ -88,7 +88,7 @@ public class CentroCustoValidatorsTests
     [Fact]
     public void CriarRegraRateio_BaseDinamicaSemValorBase_EhInvalido()
     {
-        var cmd = new CriarRegraRateioCommand(1, "Rateio Energia", "Despesa Energia",
+        var cmd = new CriarRegraRateioCommand(1, "Rateio Energia", 42,
             TipoBaseRateio.AreaM2,
             [new RegraDestinoDto(10, 50m, null), new RegraDestinoDto(20, 50m, 80m)]);
 
@@ -101,7 +101,7 @@ public class CentroCustoValidatorsTests
     [Fact]
     public void CriarRegraRateio_BaseDinamicaComValoresBase_EhValido()
     {
-        var cmd = new CriarRegraRateioCommand(1, "Rateio Energia", "Despesa Energia",
+        var cmd = new CriarRegraRateioCommand(1, "Rateio Energia", 42,
             TipoBaseRateio.Headcount,
             [new RegraDestinoDto(10, 50m, 30m), new RegraDestinoDto(20, 50m, 10m)]);
 
@@ -111,7 +111,7 @@ public class CentroCustoValidatorsTests
     [Fact]
     public void CriarRegraRateio_SemDestinos_EhInvalido()
     {
-        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", "Despesa Aluguel",
+        var cmd = new CriarRegraRateioCommand(1, "Rateio Aluguel", 42,
             TipoBaseRateio.FixoPercentual, []);
 
         Assert.False(_criarRegraValidator.Validate(cmd).IsValid);
