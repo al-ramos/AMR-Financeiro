@@ -4,14 +4,13 @@ using AMR.Financeiro.Application.Features.ContasReceber.Handlers;
 using AMR.Financeiro.Domain.Entities;
 using AMR.Financeiro.Domain.Enums;
 using AMR.Financeiro.Domain.Interfaces;
-using TipoContaPlano = AMR.Financeiro.Domain.Enums.TipoContaPlano;
 
 namespace AMR.Financeiro.Tests.Features.ContasReceber;
 
 public class ReceberContaHandlerTests
 {
     private readonly Mock<IContaReceberRepository> _repoMock = new();
-    private readonly Mock<IPlanoContasRepository> _planoMock = new();
+    private readonly Mock<IPlanoDeContasRepository> _planoMock = new();
     private readonly Mock<ILancamentoFinanceiroRepository> _lancamentoMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
 
@@ -63,10 +62,10 @@ public class ReceberContaHandlerTests
     public async Task Handle_ComPlanoConta_CriaLancamentoCredito()
     {
         var conta = ContaAberta();
-        var plano = new AMR.Financeiro.Domain.Entities.PlanoContas(1, "1.1.3", "Contas a Receber", TipoContaPlano.Analitica);
+        var plano = new AMR.Financeiro.Domain.Entities.PlanoDeContas(1, "1.1.3", "Contas a Receber", TipoContaContabil.Ativo, NaturezaConta.Devedora, 3, null, GrupoDRE.NaoAplicavel, 1, aceitaLancamentos: true);
 
         _repoMock.Setup(r => r.ObterPorIdAsync(1, default)).ReturnsAsync(conta);
-        _planoMock.Setup(r => r.ObterPorCodigoAsync(1, "1.1.3", default)).ReturnsAsync(plano);
+        _planoMock.Setup(r => r.GetByCodigoAsync(1, "1.1.3", default)).ReturnsAsync(plano);
 
         await CreateHandler().Handle(new ReceberContaCommand(1, new DateOnly(2026, 6, 1)), default);
 
@@ -78,8 +77,8 @@ public class ReceberContaHandlerTests
     {
         var conta = ContaAberta();
         _repoMock.Setup(r => r.ObterPorIdAsync(1, default)).ReturnsAsync(conta);
-        _planoMock.Setup(r => r.ObterPorCodigoAsync(1, "1.1.3", default))
-                  .ReturnsAsync((AMR.Financeiro.Domain.Entities.PlanoContas?)null);
+        _planoMock.Setup(r => r.GetByCodigoAsync(1, "1.1.3", default))
+                  .ReturnsAsync((AMR.Financeiro.Domain.Entities.PlanoDeContas?)null);
 
         await CreateHandler().Handle(new ReceberContaCommand(1, new DateOnly(2026, 6, 1)), default);
 

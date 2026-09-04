@@ -10,17 +10,17 @@ namespace AMR.Financeiro.Application.Features.Lancamentos.Handlers;
 
 public class CriarLancamentoHandler(
     ILancamentoFinanceiroRepository repo,
-    IPlanoContasRepository planoRepo,
+    IPlanoDeContasRepository planoRepo,
     IUnitOfWork uow,
     IEventPublisher publisher)
     : IRequestHandler<CriarLancamentoCommand, int>
 {
     public async Task<int> Handle(CriarLancamentoCommand cmd, CancellationToken ct)
     {
-        var plano = await planoRepo.ObterPorIdAsync(cmd.PlanoContasId, ct)
+        var plano = await planoRepo.GetByIdAsync(cmd.PlanoContasId, ct)
             ?? throw new InvalidOperationException($"Plano de Contas Id {cmd.PlanoContasId} nao encontrado.");
 
-        if (!plano.AceitaLancamentos())
+        if (!plano.AceitaLancamentos)
             throw new InvalidOperationException(
                 $"A conta '{plano.Codigo} - {plano.Descricao}' é Sintética e não aceita lançamentos diretos. Use uma conta Analítica.");
 

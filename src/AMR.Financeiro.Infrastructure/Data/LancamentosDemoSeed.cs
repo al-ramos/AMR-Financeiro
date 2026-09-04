@@ -14,22 +14,22 @@ public static class LancamentosDemoSeed
         if (await ctx.Lancamentos.AnyAsync(l => l.CdFilial == cdFilial))
             return;
 
-        // Busca contas analíticas pelo código
+        // Busca contas analíticas pelo código no plano único (FIN-01)
         async Task<int> ContaId(string codigo) =>
-            await ctx.PlanoContas
+            await ctx.PlanoDeContas
                 .Where(c => c.CdFilial == cdFilial && c.Codigo == codigo)
                 .Select(c => c.Id)
                 .FirstOrDefaultAsync();
 
-        var idReceita    = await ContaId("3.1.1"); // Receita de Vendas
+        var idReceita    = await ContaId("3.1.1"); // Receita de Produtos
         var idServicos   = await ContaId("3.1.2"); // Receita de Serviços
-        var idEnergia    = await ContaId("4.1.1"); // Energia Elétrica
-        var idAluguel    = await ContaId("4.1.2"); // Aluguel
-        var idTelefone   = await ContaId("4.1.3"); // Telefone e Internet
-        var idSalarios   = await ContaId("4.2.1"); // Salários e Encargos
-        var idProlabore  = await ContaId("4.2.2"); // Pró-labore
-        var idMaterial   = await ContaId("4.2.3"); // Material de Escritório
-        var idCMV        = await ContaId("5.1.1"); // CMV
+        var idEnergia    = await ContaId("5.2.3"); // Energia e Utilities
+        var idAluguel    = await ContaId("5.2.2"); // Aluguel
+        var idTelefone   = await ContaId("6.2.2"); // IOF e Tarifas Bancárias
+        var idSalarios   = await ContaId("5.2.1"); // Salários Administrativos
+        var idProlabore  = await ContaId("5.1.1"); // Salários Comerciais
+        var idMaterial   = await ContaId("5.1.2"); // Comissões
+        var idCMV        = await ContaId("4.1.1"); // Custo dos Produtos Vendidos
 
         if (idReceita == 0 || idAluguel == 0) return; // Plano de contas não seedado
 

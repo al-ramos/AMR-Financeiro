@@ -30,9 +30,9 @@ export function PlanoContasLinha({ node, onEditar, onToggleAtivo }: Props) {
             <span className="font-monospace text-muted" style={{ fontSize: 12 }}>{node.codigo}</span>
           </div>
         </td>
-        <td className={node.tipo === 'Sintetica' ? 'fw-semibold' : ''}>{node.descricao}</td>
+        <td className={!node.aceitaLancamentos ? 'fw-semibold' : ''}>{node.descricao}</td>
         <td>
-          {node.tipo === 'Sintetica'
+          {!node.aceitaLancamentos
             ? <span className="badge rounded-pill" style={{ background: '#ede9fe', color: '#5b21b6', fontSize: 11, padding: '3px 9px' }}>Sintética</span>
             : <span className="badge rounded-pill" style={{ background: '#d1fae5', color: '#065f46', fontSize: 11, padding: '3px 9px' }}>Analítica</span>
           }

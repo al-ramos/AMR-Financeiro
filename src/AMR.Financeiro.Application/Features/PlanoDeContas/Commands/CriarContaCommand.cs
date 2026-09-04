@@ -7,7 +7,11 @@ namespace AMR.Financeiro.Application.Features.PlanoDeContas.Commands;
 public record CriarContaCommand(
     int CdFilial, string Codigo, string Descricao,
     TipoContaContabil Tipo, NaturezaConta Natureza,
-    int Nivel, int? PaiId, GrupoDRE GrupoDre, int OrdemExibicao)
+    int Nivel, int? PaiId, GrupoDRE GrupoDre, int OrdemExibicao,
+    // Conta analitica: aceita lancamento direto. Precisa ser explicito — enquanto
+    // era derivado de "nivel == 5", nenhuma conta criada pela tela podia receber
+    // lancamento, porque a arvore padrao vai ate o nivel 3.
+    bool AceitaLancamentos = false)
     : IRequest<int>; // retorna Id criado
 
 public class CriarContaHandler(IPlanoDeContasRepository repo, IUnitOfWork uow)
@@ -30,7 +34,7 @@ public class CriarContaHandler(IPlanoDeContasRepository repo, IUnitOfWork uow)
 
         var conta = new Domain.Entities.PlanoDeContas(
             cmd.CdFilial, cmd.Codigo, cmd.Descricao, cmd.Tipo, cmd.Natureza,
-            cmd.Nivel, cmd.PaiId, cmd.GrupoDre, cmd.OrdemExibicao);
+            cmd.Nivel, cmd.PaiId, cmd.GrupoDre, cmd.OrdemExibicao, cmd.AceitaLancamentos);
 
         await repo.AddAsync(conta, ct);
         await uow.SaveChangesAsync(ct);

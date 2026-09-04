@@ -32,17 +32,9 @@ public class PlanoDeContasRepository(FinanceiroDbContext ctx) : IPlanoDeContasRe
     /// (LancamentoFinanceiro), que referencia o plano legado (PlanoContas) via PlanoContasId.
     /// O vínculo com o plano novo (planodecontas) é feito pelo par (CdFilial, Codigo).
     /// </summary>
-    public async Task<bool> TemLancamentosAsync(int contaId, CancellationToken ct = default)
-    {
-        var conta = await GetByIdAsync(contaId, ct);
-        if (conta is null) return false;
-
-        return await ctx.Lancamentos.AnyAsync(l =>
-            ctx.PlanoContas.Any(p =>
-                p.Id == l.PlanoContasId &&
-                p.CdFilial == conta.CdFilial &&
-                p.Codigo == conta.Codigo), ct);
-    }
+    // Consulta direta pela FK: o lançamento aponta para esta conta, sem ponte por Codigo.
+    public Task<bool> TemLancamentosAsync(int contaId, CancellationToken ct = default) =>
+        ctx.Lancamentos.AnyAsync(l => l.PlanoContasId == contaId, ct);
 
     public Task<bool> TemContasFilhasAsync(int contaId, CancellationToken ct = default) =>
         ctx.PlanoDeContas.AnyAsync(x => x.PaiId == contaId, ct);

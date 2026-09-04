@@ -7,7 +7,7 @@ namespace AMR.Financeiro.Application.Features.ContasPagar.Handlers;
 
 public class PagarContaHandler(
     IContaPagarRepository repo,
-    IPlanoContasRepository planoContasRepo,
+    IPlanoDeContasRepository planoContasRepo,
     ILancamentoFinanceiroRepository lancamentoRepo,
     IUnitOfWork uow)
     : IRequestHandler<PagarContaCommand, bool>
@@ -24,7 +24,7 @@ public class PagarContaHandler(
         repo.Atualizar(conta);
 
         // Registrar lançamento automático de débito
-        var planoConta = await planoContasRepo.ObterPorCodigoAsync(conta.CdFilial, CodigoContasPagar, ct);
+        var planoConta = await planoContasRepo.GetByCodigoAsync(conta.CdFilial, CodigoContasPagar, ct);
         if (planoConta is not null)
         {
             var lancamento = LancamentoFinanceiro.DePagamento(

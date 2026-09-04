@@ -81,7 +81,7 @@ public class GetDreCentroCustoHandler(ICentroCustoRepository repo)
 
     private static List<ItemDreCCDto> AgruparPorConta(IEnumerable<Domain.Entities.LancamentoFinanceiro> lancamentos) =>
         lancamentos
-            .GroupBy(l => new { l.PlanoContas.Codigo, l.PlanoContas.Descricao })
+            .GroupBy(l => new { l.Conta.Codigo, l.Conta.Descricao })
             .Select(g => new ItemDreCCDto(g.Key.Codigo, g.Key.Descricao, g.Sum(l => l.Valor)))
             .OrderBy(i => i.ContaCodigo)
             .ToList();

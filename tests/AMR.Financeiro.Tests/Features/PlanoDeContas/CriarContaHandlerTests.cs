@@ -69,7 +69,7 @@ public class CriarContaHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ContaNivel5_AceitaLancamentos()
+    public async Task Handle_ContaAnalitica_AceitaLancamentos()
     {
         _repoMock.Setup(r => r.GetByCodigoAsync(1, "3.1.1.1.1", default))
                  .ReturnsAsync((Domain.Entities.PlanoDeContas?)null);
@@ -81,7 +81,8 @@ public class CriarContaHandlerTests
                  .Callback<Domain.Entities.PlanoDeContas, CancellationToken>((c, _) => capturada = c);
 
         var cmd = new CriarContaCommand(1, "3.1.1.1.1", "Venda de Produtos",
-            TipoContaContabil.Receita, NaturezaConta.Credora, 5, 4, GrupoDRE.ReceitaBruta, 1);
+            TipoContaContabil.Receita, NaturezaConta.Credora, 5, 4, GrupoDRE.ReceitaBruta, 1,
+            AceitaLancamentos: true);
 
         await CreateHandler().Handle(cmd, default);
 

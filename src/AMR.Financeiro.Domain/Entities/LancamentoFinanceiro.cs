@@ -7,8 +7,13 @@ public class LancamentoFinanceiro
     public int Id { get; private set; }
     public int CdFilial { get; private set; }
 
+    /// <summary>
+    /// Conta do plano (<see cref="PlanoDeContas"/>) em que o lançamento é contabilizado.
+    /// O nome PlanoContasId é mantido porque é o contrato já exposto pela API e consumido
+    /// pelo frontend; o que mudou foi o alvo, que antes era o plano legado. Ver FIN-01.
+    /// </summary>
     public int PlanoContasId { get; private set; }
-    public PlanoContas PlanoContas { get; private set; } = null!;
+    public PlanoDeContas Conta { get; private set; } = null!;
 
     public TipoLancamento Tipo { get; private set; }
     public OrigemLancamento Origem { get; private set; }

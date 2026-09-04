@@ -3,10 +3,15 @@ using AMR.Financeiro.Domain.Enums;
 namespace AMR.Financeiro.Domain.Entities;
 
 /// <summary>
-/// Plano de Contas gerencial hierárquico (5 níveis) com classificação para a DRE.
-/// Substitui gradualmente o plano legado <see cref="PlanoContas"/> — o vínculo entre
-/// os dois é feito pelo par (CdFilial, Codigo).
-/// Apenas contas de nível 5 (analíticas) aceitam lançamentos.
+/// Plano de contas único do módulo: é o razão (para onde os lançamentos apontam) e,
+/// ao mesmo tempo, carrega a classificação gerencial usada pela DRE.
+///
+/// Cobre tanto as contas patrimoniais (Ativo/Passivo, com <see cref="GrupoDRE.NaoAplicavel"/>)
+/// quanto as de resultado. Antes existia um plano legado separado, e o vínculo entre os dois
+/// era feito pelo par (CdFilial, Codigo) — o que permitia que um Id da tela fosse resolvido
+/// contra a outra tabela e o lançamento acabasse em outra conta. Ver FIN-01.
+///
+/// Só contas analíticas (folhas) aceitam lançamentos; a sintética existe para agrupar.
 /// </summary>
 public class PlanoDeContas
 {
@@ -25,7 +30,11 @@ public class PlanoDeContas
 
     public int? PaiId { get; private set; }
 
-    /// <summary>Somente contas analíticas (nível 5) aceitam lançamentos diretos.</summary>
+    /// <summary>
+    /// Conta analítica: aceita lançamento direto. Declarado explicitamente em vez de
+    /// derivado do nível — amarrar em "nível 5" obrigava a inventar profundidade para
+    /// contas que são analíticas no nível 3, como 1.1.3 Contas a Receber.
+    /// </summary>
     public bool AceitaLancamentos { get; private set; }
 
     public GrupoDRE GrupoDRE { get; private set; }
@@ -44,7 +53,8 @@ public class PlanoDeContas
         int nivel,
         int? paiId,
         GrupoDRE grupoDre,
-        int ordemExibicao)
+        int ordemExibicao,
+        bool aceitaLancamentos = false)
     {
         if (nivel is < 1 or > 5)
             throw new ArgumentOutOfRangeException(nameof(nivel), nivel, "Nível deve estar entre 1 e 5.");
@@ -58,7 +68,7 @@ public class PlanoDeContas
         PaiId = paiId;
         GrupoDRE = grupoDre;
         OrdemExibicao = ordemExibicao;
-        AceitaLancamentos = nivel == 5;
+        AceitaLancamentos = aceitaLancamentos;
     }
 
     public void Atualizar(string descricao, GrupoDRE grupoDre, int ordemExibicao)
@@ -67,6 +77,12 @@ public class PlanoDeContas
         GrupoDRE = grupoDre;
         OrdemExibicao = ordemExibicao;
     }
+
+    /// <summary>Converte a conta em sintética ou analítica após a criação.</summary>
+    public void DefinirAceitaLancamentos(bool aceita) => AceitaLancamentos = aceita;
+
+    /// <summary>Conta patrimonial — existe no razão, mas não compõe nenhuma linha da DRE.</summary>
+    public bool EhPatrimonial() => GrupoDRE == GrupoDRE.NaoAplicavel;
 
     public void Inativar() => Ativo = false;
 

@@ -47,7 +47,7 @@ public class GetExtratoHandler(IContaBancariaRepository repo)
             l.Historico,
             l.Tipo.ToString(),
             l.Valor,
-            l.PlanoContas?.Descricao ?? string.Empty
+            l.Conta?.Descricao ?? string.Empty
         )).ToList();
     }
 }

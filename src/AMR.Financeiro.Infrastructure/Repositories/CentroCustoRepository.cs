@@ -88,7 +88,7 @@ public class CentroCustoRepository(FinanceiroDbContext ctx) : ICentroCustoReposi
         int centroCustoId, DateOnly inicio, DateOnly fim, CancellationToken ct = default) =>
         await ctx.Lancamentos
             .AsNoTracking()
-            .Include(l => l.PlanoContas)
+            .Include(l => l.Conta)
             .Where(l => l.CentroCustoId == centroCustoId
                      && l.DataLancamento >= inicio
                      && l.DataLancamento <= fim)
